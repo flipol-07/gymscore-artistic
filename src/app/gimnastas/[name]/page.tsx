@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Navbar } from '@/shared/components/navbar'
 import { Footer } from '@/shared/components/footer'
 import { getGymnastHistory } from '@/features/competitions/data/demo-data'
+import { FEMALE_APPARATUS, APPARATUS_NAMES, APPARATUS_ICONS } from '@/features/competitions/types'
 
 export default function GymnastProfilePage() {
   const params = useParams()
@@ -52,10 +53,17 @@ export default function GymnastProfilePage() {
                       <th>Fecha</th>
                       <th>Categoría</th>
                       <th>Club</th>
-                      <th style={{ textAlign: 'center' }}>Sal</th>
-                      <th style={{ textAlign: 'center' }}>Par</th>
-                      <th style={{ textAlign: 'center' }}>Bar</th>
-                      <th style={{ textAlign: 'center' }}>Sue</th>
+                      {FEMALE_APPARATUS.map(app => (
+                        <th key={app} style={{ textAlign: 'center' }}>
+                          <div style={{ display: 'flex', justifyContent: 'center' }} title={APPARATUS_NAMES[app]}>
+                            <img
+                              src={APPARATUS_ICONS[app]}
+                              alt={APPARATUS_NAMES[app]}
+                              style={{ height: 18, width: 'auto', opacity: 0.7 }}
+                            />
+                          </div>
+                        </th>
+                      ))}
                       <th style={{ textAlign: 'right' }}>Total</th>
                       <th></th>
                     </tr>

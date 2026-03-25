@@ -9,7 +9,7 @@ import {
   getPromotions,
   getRankings,
 } from '@/features/competitions/data/demo-data'
-import { FEMALE_APPARATUS, MALE_APPARATUS, APPARATUS_NAMES, type Apparatus } from '@/features/competitions/types'
+import { FEMALE_APPARATUS, MALE_APPARATUS, APPARATUS_NAMES, APPARATUS_ICONS, type Apparatus } from '@/features/competitions/types'
 import type { RankingEntry } from '@/features/competitions/types'
 
 function getScore(entry: RankingEntry, app: Apparatus): number {
@@ -179,7 +179,13 @@ export default function AdminCompeticionPage() {
                         <th>Club</th>
                         {apparatus.map((app) => (
                           <th key={app} style={{ textAlign: 'center', minWidth: 72 }}>
-                            {APPARATUS_NAMES[app]}
+                            <div style={{ display: 'flex', justifyContent: 'center' }} title={APPARATUS_NAMES[app]}>
+                              <img
+                                src={APPARATUS_ICONS[app]}
+                                alt={APPARATUS_NAMES[app]}
+                                style={{ height: 20, width: 'auto', opacity: 0.7 }}
+                              />
+                            </div>
                           </th>
                         ))}
                         <th style={{ textAlign: 'right' }}>Total</th>

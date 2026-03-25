@@ -127,10 +127,10 @@ export const APPARATUS_NAMES: Record<Apparatus, string> = {
 }
 
 export const APPARATUS_ICONS: Record<Apparatus, string> = {
-  vault: 'Zap',
-  bars: 'Layers',
-  beam: 'Shield',
-  floor: 'Music',
+  vault: '/icons/apparatus/vault.png',
+  bars: '/icons/apparatus/bars.png',
+  beam: '/icons/apparatus/beam.png',
+  floor: '/icons/apparatus/floor.png',
   pommel: 'CircleDashed',
   rings: 'Circle',
   p_bars: 'Columns',

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { APPARATUS_NAMES, type RankingEntry, type Apparatus } from '@/features/competitions/types'
+import { APPARATUS_NAMES, APPARATUS_ICONS, type RankingEntry, type Apparatus } from '@/features/competitions/types'
 
 interface RankingsTableProps {
   rankings: RankingEntry[]
@@ -41,10 +41,14 @@ export function RankingsTable({ rankings, apparatus, slug, categoryId }: Ranking
               <th key={app} style={{ textAlign: 'center' }}>
                 <Link
                   href={`/competiciones/${slug}/${categoryId}/${app}`}
-                  style={{ color: 'var(--gs-primary)', fontWeight: 600 }}
+                  style={{ display: 'flex', justifyContent: 'center' }}
                   title={APPARATUS_NAMES[app]}
                 >
-                  {APPARATUS_NAMES[app].substring(0, 3)}
+                  <img
+                    src={APPARATUS_ICONS[app]}
+                    alt={APPARATUS_NAMES[app]}
+                    style={{ height: 24, width: 'auto', opacity: 0.8 }}
+                  />
                 </Link>
               </th>
             ))}

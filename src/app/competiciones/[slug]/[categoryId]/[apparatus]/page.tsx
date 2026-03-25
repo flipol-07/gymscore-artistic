@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import { Navbar } from '@/shared/components/navbar'
 import { Footer } from '@/shared/components/footer'
 import { getCategory, getApparatusRankings } from '@/features/competitions/data/demo-data'
-import { APPARATUS_NAMES, type Apparatus } from '@/features/competitions/types'
+import { APPARATUS_NAMES, APPARATUS_ICONS, type Apparatus } from '@/features/competitions/types'
 
 interface Props {
   params: Promise<{ slug: string; categoryId: string; apparatus: string }>
@@ -37,9 +37,16 @@ export default async function AparatoPage({ params }: Props) {
               {' → '}
               {apparatusName}
             </div>
-            <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 4 }}>
-              {apparatusName} — {category.name}
-            </h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
+              <img
+                src={APPARATUS_ICONS[apparatusKey]}
+                alt={apparatusName}
+                style={{ height: 32, width: 'auto' }}
+              />
+              <h1 style={{ fontSize: 22, fontWeight: 700 }}>
+                {apparatusName} — {category.name}
+              </h1>
+            </div>
             <div style={{ fontSize: 14, color: 'var(--gs-muted)' }}>
               {scores.length} participantes · Mejor nota: {scores[0]?.finalScore.toFixed(3) ?? '—'}
             </div>
