@@ -1,0 +1,149 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: #fbf9f5;
+    --foreground: #1b1c1a;
+
+    --card: #ffffff;
+    --card-foreground: #1b1c1a;
+
+    --popover: #ffffff;
+    --popover-foreground: #1b1c1a;
+
+    --primary: #8c4b55;
+    --primary-foreground: #ffffff;
+
+    --secondary: #735c00;
+    --secondary-foreground: #ffffff;
+
+    --muted: #f5f3ef;
+    --muted-foreground: #7f7663;
+
+    --accent: #D4AF37;
+    --accent-foreground: #ffffff;
+
+    --destructive: #ba1a1a;
+    --destructive-foreground: #ffffff;
+
+    --border: #d0c5af;
+    --input: #d0c5af;
+    --ring: #8c4b55;
+
+    --radius: 0px;
+
+    /* Atelier Design System Colors */
+    --atelier-ivory: #fbf9f5;
+    --atelier-rose: #8c4b55;
+    --atelier-rose-light: #ee9da8;
+    --atelier-gold: #735c00;
+    --atelier-charcoal: #1b1c1a;
+    --atelier-silk: #f5f3ef;
+  }
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+    border-radius: var(--radius) !important;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-inter), sans-serif;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  h1, h2, h3, h4, .font-serif {
+    font-family: var(--font-newsreader), serif;
+    @apply tracking-tighter;
+  }
+}
+
+@layer components {
+  .atelier-glass {
+    @apply bg-white/80 backdrop-blur-xl border-none;
+  }
+
+  .atelier-card {
+    @apply bg-white transition-all duration-500 hover:shadow-2xl hover:shadow-black/5;
+    border: none;
+  }
+
+  .atelier-section {
+    @apply bg-[#f5f3ef];
+  }
+
+  .atelier-button-primary {
+    @apply bg-gradient-to-r from-[#8c4b55] to-[#ee9da8] text-white px-8 py-4 font-bold uppercase tracking-widest text-[10px] transition-all hover:brightness-110 active:scale-95 flex items-center justify-center gap-2;
+  }
+
+  .atelier-button-secondary {
+    @apply border border-[#7f7663]/30 text-[#8c4b55] px-8 py-4 font-bold uppercase tracking-widest text-[10px] bg-transparent hover:bg-[#8c4b55]/5 transition-all flex items-center justify-center gap-2;
+  }
+
+  .atelier-ghost-border {
+    @apply border border-[#d0c5af]/15;
+  }
+
+  .atelier-title {
+    @apply text-5xl md:text-7xl lg:text-9xl font-black italic tracking-tighter leading-[0.8];
+  }
+
+  .atelier-subtitle {
+    @apply text-sm font-black uppercase tracking-[0.4em] text-[#735c00];
+  }
+}
+
+/* Animations */
+@keyframes silk-flow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-silk {
+  background: linear-gradient(-45deg, #fbf9f5, #f5f3ef, #ffffff, #efeeea);
+  background-size: 400% 400%;
+  animation: silk-flow 15s ease infinite;
+}
+
+/* Table Specifics */
+.atelier-table-container {
+  @apply bg-white border-none overflow-hidden;
+}
+
+.atelier-table {
+  @apply w-full text-left border-collapse;
+}
+
+.atelier-table th {
+  @apply py-6 px-6 text-[10px] font-black uppercase tracking-[0.2em] border-b border-atelier-silk;
+  color: color-mix(in srgb, var(--atelier-charcoal), transparent 30%);
+}
+
+.atelier-table td {
+  @apply py-6 px-6 text-sm font-medium;
+  border-bottom: 1px solid color-mix(in srgb, var(--atelier-silk), transparent 50%);
+}
+
+.atelier-table tr:hover td {
+  background-color: color-mix(in srgb, var(--atelier-silk), transparent 70%);
+}
+
+/* Specialized utilities */
+.text-gold {
+  @apply text-[#735c00];
+}
+
+.bg-gold {
+  @apply bg-[#735c00];
+}
+
+.text-rose {
+  @apply text-[#8c4b55];
+}
+
+.bg-rose {
+  @apply bg-[#8c4b55];
+}
