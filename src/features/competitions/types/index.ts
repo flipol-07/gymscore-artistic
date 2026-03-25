@@ -1,6 +1,28 @@
 export type Gender = 'female' | 'male'
 export type CompetitionStatus = 'draft' | 'active' | 'finished'
+export type PromotionStatus = 'pending' | 'active' | 'finished'
 export type Apparatus = 'vault' | 'bars' | 'beam' | 'floor' | 'pommel' | 'rings' | 'p_bars' | 'h_bar'
+
+// Jornada: agrupación temporal dentro de un evento
+export interface CompetitionSession {
+  id: string
+  competitionId: string
+  name: string   // "Jornada 1", "Jornada Mañana", etc.
+  date: string
+  order: number
+}
+
+// Promoción: agrupación de categorías dentro de una jornada
+export interface Promotion {
+  id: string
+  sessionId: string
+  competitionId: string
+  categoryId: string  // links to existing Category
+  name: string        // "Promoción 4", "Escolar Cadete", etc.
+  gender: Gender
+  gymnast_count: number
+  status: PromotionStatus
+}
 
 export interface Club {
   id: string

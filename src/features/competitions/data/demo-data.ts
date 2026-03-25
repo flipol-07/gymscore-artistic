@@ -6,6 +6,8 @@ import type {
   ApparatusScore,
   GymnastHistory,
   Apparatus,
+  CompetitionSession,
+  Promotion,
 } from '../types'
 
 // ─── Clubs ──────────────────────────────────────────────────────────────────
@@ -601,4 +603,70 @@ export function searchCompetitions(query: string): Competition[] {
     c.location.toLowerCase().includes(q) ||
     c.slug.toLowerCase().includes(q)
   )
+}
+
+// ─── Sessions (Jornadas) ─────────────────────────────────────────────────────
+
+const sessions: CompetitionSession[] = [
+  { id: 'ses-1-1', competitionId: 'comp-1', name: 'Jornada 1 - Mañana', date: '2026-03-15', order: 1 },
+  { id: 'ses-1-2', competitionId: 'comp-1', name: 'Jornada 2 - Tarde', date: '2026-03-15', order: 2 },
+  { id: 'ses-1-3', competitionId: 'comp-1', name: 'Jornada 3 - Noche', date: '2026-03-15', order: 3 },
+  { id: 'ses-2-1', competitionId: 'comp-2', name: 'Jornada 1', date: '2025-12-20', order: 1 },
+  { id: 'ses-2-2', competitionId: 'comp-2', name: 'Jornada 2', date: '2025-12-20', order: 2 },
+  { id: 'ses-2-3', competitionId: 'comp-2', name: 'Jornada 3', date: '2025-12-21', order: 3 },
+  { id: 'ses-3-1', competitionId: 'comp-3', name: 'Jornada 1', date: '2026-02-08', order: 1 },
+  { id: 'ses-3-2', competitionId: 'comp-3', name: 'Jornada 2', date: '2026-02-08', order: 2 },
+  { id: 'ses-3-3', competitionId: 'comp-3', name: 'Jornada 3', date: '2026-02-08', order: 3 },
+  { id: 'ses-4-1', competitionId: 'comp-4', name: 'Jornada 1 - Mañana', date: '2026-03-22', order: 1 },
+  { id: 'ses-4-2', competitionId: 'comp-4', name: 'Jornada 2 - Tarde', date: '2026-03-22', order: 2 },
+  { id: 'ses-5-1', competitionId: 'comp-5', name: 'Jornada 1', date: '2026-04-12', order: 1 },
+  { id: 'ses-5-2', competitionId: 'comp-5', name: 'Jornada 2', date: '2026-04-12', order: 2 },
+  { id: 'ses-5-3', competitionId: 'comp-5', name: 'Jornada 3', date: '2026-04-12', order: 3 },
+]
+
+// ─── Promotions ──────────────────────────────────────────────────────────────
+
+const promotions: Promotion[] = [
+  { id: 'prom-1-1', sessionId: 'ses-1-1', competitionId: 'comp-1', categoryId: 'cat-1-1', name: 'Prebenjamín', gender: 'female', gymnast_count: 10, status: 'finished' },
+  { id: 'prom-1-2', sessionId: 'ses-1-1', competitionId: 'comp-1', categoryId: 'cat-1-2', name: 'Benjamín', gender: 'female', gymnast_count: 11, status: 'finished' },
+  { id: 'prom-1-3', sessionId: 'ses-1-2', competitionId: 'comp-1', categoryId: 'cat-1-3', name: 'Alevín', gender: 'female', gymnast_count: 12, status: 'finished' },
+  { id: 'prom-1-4', sessionId: 'ses-1-2', competitionId: 'comp-1', categoryId: 'cat-1-4', name: 'Infantil', gender: 'female', gymnast_count: 10, status: 'finished' },
+  { id: 'prom-1-5', sessionId: 'ses-1-3', competitionId: 'comp-1', categoryId: 'cat-1-5', name: 'Cadete', gender: 'female', gymnast_count: 10, status: 'finished' },
+  { id: 'prom-1-6', sessionId: 'ses-1-3', competitionId: 'comp-1', categoryId: 'cat-1-6', name: 'Junior-Senior', gender: 'female', gymnast_count: 8, status: 'finished' },
+  { id: 'prom-2-1', sessionId: 'ses-2-1', competitionId: 'comp-2', categoryId: 'cat-2-1', name: 'Base 1', gender: 'female', gymnast_count: 10, status: 'finished' },
+  { id: 'prom-2-2', sessionId: 'ses-2-1', competitionId: 'comp-2', categoryId: 'cat-2-2', name: 'Base 2', gender: 'female', gymnast_count: 11, status: 'finished' },
+  { id: 'prom-2-3', sessionId: 'ses-2-2', competitionId: 'comp-2', categoryId: 'cat-2-3', name: 'Base 3', gender: 'female', gymnast_count: 10, status: 'finished' },
+  { id: 'prom-2-4', sessionId: 'ses-2-2', competitionId: 'comp-2', categoryId: 'cat-2-4', name: 'Escolar Cadete', gender: 'female', gymnast_count: 11, status: 'finished' },
+  { id: 'prom-2-5', sessionId: 'ses-2-3', competitionId: 'comp-2', categoryId: 'cat-2-5', name: 'Escolar Senior', gender: 'female', gymnast_count: 10, status: 'finished' },
+  { id: 'prom-3-1', sessionId: 'ses-3-1', competitionId: 'comp-3', categoryId: 'cat-3-1', name: 'Alevín Copa', gender: 'female', gymnast_count: 12, status: 'finished' },
+  { id: 'prom-3-2', sessionId: 'ses-3-1', competitionId: 'comp-3', categoryId: 'cat-3-2', name: 'Infantil Copa', gender: 'female', gymnast_count: 10, status: 'finished' },
+  { id: 'prom-3-3', sessionId: 'ses-3-2', competitionId: 'comp-3', categoryId: 'cat-3-3', name: 'Cadete Copa', gender: 'female', gymnast_count: 10, status: 'finished' },
+  { id: 'prom-3-4', sessionId: 'ses-3-2', competitionId: 'comp-3', categoryId: 'cat-3-4', name: 'Junior Copa', gender: 'female', gymnast_count: 11, status: 'finished' },
+  { id: 'prom-3-5', sessionId: 'ses-3-3', competitionId: 'comp-3', categoryId: 'cat-3-5', name: 'Senior Copa', gender: 'female', gymnast_count: 10, status: 'finished' },
+  { id: 'prom-3-6', sessionId: 'ses-3-3', competitionId: 'comp-3', categoryId: 'cat-3-6', name: 'Absoluta', gender: 'female', gymnast_count: 10, status: 'finished' },
+  { id: 'prom-4-1', sessionId: 'ses-4-1', competitionId: 'comp-4', categoryId: 'cat-4-1', name: 'Prebenjamín', gender: 'female', gymnast_count: 10, status: 'finished' },
+  { id: 'prom-4-2', sessionId: 'ses-4-1', competitionId: 'comp-4', categoryId: 'cat-4-2', name: 'Benjamín', gender: 'female', gymnast_count: 11, status: 'active' },
+  { id: 'prom-4-3', sessionId: 'ses-4-2', competitionId: 'comp-4', categoryId: 'cat-4-3', name: 'Alevín', gender: 'female', gymnast_count: 11, status: 'pending' },
+  { id: 'prom-4-4', sessionId: 'ses-4-2', competitionId: 'comp-4', categoryId: 'cat-4-4', name: 'Infantil-Cadete', gender: 'female', gymnast_count: 11, status: 'pending' },
+  { id: 'prom-5-1', sessionId: 'ses-5-1', competitionId: 'comp-5', categoryId: 'cat-5-1', name: 'Base 1', gender: 'female', gymnast_count: 8, status: 'pending' },
+  { id: 'prom-5-2', sessionId: 'ses-5-1', competitionId: 'comp-5', categoryId: 'cat-5-2', name: 'Base 2', gender: 'female', gymnast_count: 9, status: 'pending' },
+  { id: 'prom-5-3', sessionId: 'ses-5-2', competitionId: 'comp-5', categoryId: 'cat-5-3', name: 'Base 3', gender: 'female', gymnast_count: 8, status: 'pending' },
+  { id: 'prom-5-4', sessionId: 'ses-5-2', competitionId: 'comp-5', categoryId: 'cat-5-4', name: 'Alevín', gender: 'female', gymnast_count: 10, status: 'pending' },
+  { id: 'prom-5-5', sessionId: 'ses-5-3', competitionId: 'comp-5', categoryId: 'cat-5-5', name: 'Infantil', gender: 'female', gymnast_count: 8, status: 'pending' },
+]
+
+export function getSessions(competitionSlug: string): CompetitionSession[] {
+  const comp = competitions.find((c) => c.slug === competitionSlug)
+  if (!comp) return []
+  return sessions.filter((s) => s.competitionId === comp.id).sort((a, b) => a.order - b.order)
+}
+
+export function getPromotions(sessionId: string): Promotion[] {
+  return promotions.filter((p) => p.sessionId === sessionId)
+}
+
+export function getPromotionsByCompetition(competitionSlug: string): Promotion[] {
+  const comp = competitions.find((c) => c.slug === competitionSlug)
+  if (!comp) return []
+  return promotions.filter((p) => p.competitionId === comp.id)
 }

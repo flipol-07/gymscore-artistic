@@ -3,10 +3,8 @@ import { notFound } from 'next/navigation'
 import { Navbar } from '@/shared/components/navbar'
 import { Footer } from '@/shared/components/footer'
 import { getCategory, getRankings } from '@/features/competitions/data/demo-data'
-import { FEMALE_APPARATUS, MALE_APPARATUS, type Apparatus } from '@/features/competitions/types'
-import { Podium } from '@/features/competitions/components/podium'
+import { FEMALE_APPARATUS, MALE_APPARATUS, APPARATUS_NAMES, type Apparatus } from '@/features/competitions/types'
 import { RankingsTable } from '@/features/competitions/components/rankings-table'
-import { ChevronRight, Home, Activity } from 'lucide-react'
 
 interface Props {
   params: Promise<{ slug: string; categoryId: string }>
@@ -18,103 +16,82 @@ export default async function ResultadosPage({ params }: Props) {
   if (!category) notFound()
 
   const rankings = getRankings(categoryId)
-  const apparatus: Apparatus[] = category.gender === 'female'
-    ? FEMALE_APPARATUS
-    : MALE_APPARATUS
-
-  const podiumEntries = rankings.slice(0, 3)
+  const apparatus: Apparatus[] = category.gender === 'female' ? FEMALE_APPARATUS : MALE_APPARATUS
 
   return (
-    <div className="min-h-screen bg-[#fbf9f5] flex flex-col">
-      <Navbar competitionName={category.competitionName} />
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--gs-bg)' }}>
+      <Navbar />
 
-      <main className="flex-1 pb-32">
-        {/* Editorial Header */}
-        <section className="pt-24 pb-32 px-6 md:px-12 bg-white border-b border-[#d0c5af]/10">
-          <div className="mx-auto max-w-[1400px]">
-            {/* Breadcrumb */}
-            <nav className="mb-12 flex items-center gap-4 text-[10px] font-black uppercase tracking-[0.2em] text-[#1b1c1a]/60 italic">
-               <Link href="/" className="hover:text-[#8c4b55] transition-colors flex items-center gap-2">
-                 <Home size={12} />
-                 Atelier
-               </Link>
-               <ChevronRight size={10} />
-               <Link href={`/competiciones/${slug}`} className="hover:text-[#8c4b55] transition-colors">
-                 {category.competitionName}
-               </Link>
-               <ChevronRight size={10} />
-               <span className="text-[#1b1c1a] font-black underline decoration-[#d4af37] underline-offset-4">{category.name}</span>
-            </nav>
-
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-12">
-              <div className="space-y-4">
-                 <div className="atelier-subtitle">
-                   Clasificación · {category.gender === 'female' ? 'GAF' : 'GAM'}
-                 </div>
-                 <h1 className="atelier-title">
-                   Ranking <br />
-                   <span className="text-[#8c4b55]">General.</span>
-                 </h1>
-              </div>
-
-              <div className="flex flex-col items-start md:items-end gap-3">
-                <div className="flex items-center gap-3 px-6 py-2 bg-[#f5f3ef] border border-[#d4af37]/20">
-                   <Activity size={18} className="text-[#8c4b55]" />
-                   <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#1b1c1a]">Resultados en Vivo</span>
-                </div>
-                <p className="text-[10px] text-[#1b1c1a]/60 font-bold uppercase tracking-[0.2em]">Validadas por jurado oficial</p>
-              </div>
+      <main style={{ flex: 1 }}>
+        {/* Header */}
+        <div style={{ background: '#fff', borderBottom: '1px solid var(--gs-border)', padding: '28px 0' }}>
+          <div className="gs-container">
+            <div style={{ fontSize: 13, color: 'var(--gs-muted)', marginBottom: 8 }}>
+              <Link href="/" style={{ color: 'var(--gs-primary)' }}>Inicio</Link>
+              {' → '}
+              <Link href={`/competiciones/${slug}`} style={{ color: 'var(--gs-primary)' }}>
+                {category.competitionName}
+              </Link>
+              {' → '}
+              {category.name}
+            </div>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--gs-text)', marginBottom: 4 }}>
+              {category.name}
+            </h1>
+            <div style={{ fontSize: 14, color: 'var(--gs-muted)' }}>
+              {category.gender === 'female' ? 'Gimnasia Artística Femenina (GAF)' : 'Gimnasia Artística Masculina (GAM)'}
+              {' · '}{rankings.length} gimnastas
             </div>
           </div>
-        </section>
+        </div>
 
-        <section className="mx-auto max-w-[1400px] px-6 md:px-12 py-32 space-y-32">
-          {/* Podium (Modern Editorial) */}
-          {podiumEntries.length > 0 && (
-            <div className="space-y-12">
-               <div className="flex items-center gap-6">
-                 <div className="h-px w-12 bg-[#8c4b55]" />
-                 <h2 className="text-sm font-black uppercase tracking-[0.4em] text-[#1b1c1a]">El Podio</h2>
-               </div>
-               <Podium entries={podiumEntries} />
-            </div>
-          )}
-
-          {/* Full Table */}
-          <div className="space-y-12">
-             <div className="flex items-center justify-between">
-               <div className="flex items-center gap-6">
-                 <div className="h-px w-12 bg-[#8c4b55]" />
-                 <h2 className="text-sm font-black uppercase tracking-[0.4em] text-[#1b1c1a]">Clasificación General ({rankings.length})</h2>
-               </div>
-               <div className="hidden lg:flex items-center gap-3 text-[10px] font-bold text-[#1b1c1a]/60 uppercase tracking-[0.2em]">
-                  <Activity size={14} />
-                  Pulsa iconos para notas detalladas
-               </div>
-             </div>
-             
-             <div className="atelier-table-container">
-               <RankingsTable 
-                  rankings={rankings} 
-                  apparatus={apparatus} 
-                  slug={slug} 
-                  categoryId={categoryId} 
-                />
-             </div>
+        {/* Apparatus tabs */}
+        <div style={{ background: '#fff', borderBottom: '1px solid var(--gs-border)' }}>
+          <div className="gs-container" style={{ display: 'flex', gap: 0, overflowX: 'auto' }}>
+            <Link
+              href={`/competiciones/${slug}/${categoryId}`}
+              style={{
+                padding: '12px 16px',
+                fontSize: 13,
+                fontWeight: 600,
+                color: 'var(--gs-primary)',
+                borderBottom: '2px solid var(--gs-primary)',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              General
+            </Link>
+            {apparatus.map((app) => (
+              <Link
+                key={app}
+                href={`/competiciones/${slug}/${categoryId}/${app}`}
+                style={{
+                  padding: '12px 16px',
+                  fontSize: 13,
+                  color: 'var(--gs-muted)',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {APPARATUS_NAMES[app]}
+              </Link>
+            ))}
           </div>
-        </section>
+        </div>
+
+        {/* Rankings table */}
+        <div className="gs-container" style={{ padding: '24px 16px' }}>
+          <div className="gs-card" style={{ overflow: 'hidden' }}>
+            <RankingsTable
+              rankings={rankings}
+              apparatus={apparatus}
+              slug={slug}
+              categoryId={categoryId}
+            />
+          </div>
+        </div>
       </main>
 
       <Footer />
     </div>
   )
-}
-
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr)
-  return date.toLocaleDateString('es-ES', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  }).toUpperCase()
 }

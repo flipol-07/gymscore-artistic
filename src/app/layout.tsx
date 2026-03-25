@@ -1,34 +1,36 @@
-import type { Metadata } from 'next'
-import { Inter, Newsreader } from 'next/font/google'
+import type { Metadata, Viewport } from 'next'
 import './globals.css'
-
-const inter = Inter({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-inter',
-})
-
-const newsreader = Newsreader({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-newsreader',
-  style: ['normal', 'italic'],
-})
+import { ServiceWorkerRegistrar } from './sw-register'
 
 export const metadata: Metadata = {
-  title: 'GymScore · The Kinetic Atelier',
-  description:
-    'Plataforma de resultados en directo para competiciones de gimnasia. Elegancia, precisión y arte en cada nota.',
+  title: 'GymScore · Resultados en directo',
+  description: 'Plataforma de resultados en directo para competiciones de gimnasia artística.',
+  manifest: '/manifest.json',
+  icons: {
+    icon: '/favicon.png',
+    apple: '/icons/icon-192.png',
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'GymScore',
+  },
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export const viewport: Viewport = {
+  themeColor: '#4C6FD9',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+}
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" className={`${inter.variable} ${newsreader.variable}`} suppressHydrationWarning>
-      <body className="font-sans min-h-screen antialiased bg-[#fbf9f5]">{children}</body>
+    <html lang="es" suppressHydrationWarning>
+      <body style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+        {children}
+        <ServiceWorkerRegistrar />
+      </body>
     </html>
   )
 }

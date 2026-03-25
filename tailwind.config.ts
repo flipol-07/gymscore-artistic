@@ -40,14 +40,6 @@ const config: Config = {
           DEFAULT: "var(--card)",
           foreground: "var(--card-foreground)",
         },
-        atelier: {
-          ivory: "var(--atelier-ivory)",
-          rose: "var(--atelier-rose)",
-          "rose-light": "var(--atelier-rose-light)",
-          gold: "var(--atelier-gold)",
-          charcoal: "var(--atelier-charcoal)",
-          silk: "var(--atelier-silk)",
-        }
       },
       borderRadius: {
         lg: "var(--radius)",
