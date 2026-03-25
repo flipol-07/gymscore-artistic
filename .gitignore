@@ -60,6 +60,6 @@ Thumbs.db
 *.mcp.json
 !example.mcp.json
 
-# Supabase
-supabase/.branches
-supabase/.temp
+# Claude & Playwright
+.claude/
+.playwright-mcp/
