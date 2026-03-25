@@ -1,3 +1,5 @@
+'use client'
+import { use } from 'react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { Navbar } from '@/shared/components/navbar'
@@ -9,8 +11,8 @@ interface Props {
   params: Promise<{ name: string }>
 }
 
-export default async function GimnastaPage({ params }: Props) {
-  const { name } = await params
+export default function GimnastaPage({ params }: Props) {
+  const { name } = use(params)
   const gymnastName = decodeURIComponent(name)
   const history = getGymnastHistory(gymnastName)
 
