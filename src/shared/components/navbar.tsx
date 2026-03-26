@@ -1,88 +1,119 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
-import { Menu, X } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 interface NavbarProps {
-  competitionName?: string
+  logoHref?: string
   programUrl?: string
+  isAdmin?: boolean
   showBack?: boolean
   backHref?: string
+  onBack?: () => void
 }
 
-export function Navbar({ competitionName, programUrl, showBack, backHref }: NavbarProps) {
-  const [mobileOpen, setMobileOpen] = useState(false)
+export function Navbar({ 
+  logoHref = "/", 
+  programUrl, 
+  isAdmin = false, 
+  showBack = false,
+  backHref,
+  onBack 
+}: NavbarProps) {
+  const router = useRouter()
+
+  const handleBack = () => {
+    if (onBack) {
+      onBack()
+    } else if (backHref) {
+      router.push(backHref)
+    } else {
+      router.back()
+    }
+  }
 
   return (
     <nav style={{ background: '#fff', borderBottom: '1px solid #e0e0e0', position: 'sticky', top: 0, zIndex: 50 }}>
       <div className="gs-container">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 52 }}>
-          {/* Logo */}
-          <Link href="/" style={{ fontWeight: 700, fontSize: 18, color: '#111', letterSpacing: '-0.01em' }}>
-            gym<span style={{ color: '#4C6FD9' }}>score</span>
-          </Link>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 52, position: 'relative' }}>
+          {/* Top Left: Back or Logo */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            {(isAdmin || showBack) ? (
+              <button 
+                onClick={handleBack}
+                className="gs-btn-secondary"
+                style={{ width: 36, height: 36, padding: 0, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
+                ←
+              </button>
+            ) : (
+              <Link href={logoHref} style={{ display: 'flex', alignItems: 'center' }}>
+                <img src="/logo.png" alt="GymScore" style={{ height: 40, width: 'auto' }} />
+              </Link>
+            )}
+          </div>
 
-          {/* Center: competition name */}
-          {competitionName && (
-            <span style={{ fontSize: 13, color: '#666', fontWeight: 500, display: 'none' }} className="hidden md:block">
-              {competitionName}
-            </span>
+          {/* Center Title (Admin Only) */}
+          {isAdmin && (
+            <div style={{ 
+              position: 'absolute', 
+              left: '50%', 
+              transform: 'translateX(-50%)',
+              fontSize: 13,
+              fontWeight: 800,
+              color: 'var(--gs-muted)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.15em'
+            }}>
+              ADMIN
+            </div>
           )}
 
-          {/* Desktop right links */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }} className="hidden md:flex">
-            {showBack && backHref && (
-              <Link href={backHref} className="gs-btn-secondary" style={{ fontSize: 13 }}>
-                ← Atrás
-              </Link>
+          {/* Top Right: Navigation & Control */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {isAdmin && (
+              <button
+                onClick={async () => {
+                  const { createClient } = await import('@/lib/supabase/client')
+                  const supabase = createClient()
+                  await supabase.auth.signOut()
+                  router.push('/admin')
+                }}
+                className="gs-btn-secondary"
+                style={{ height: 32, display: 'flex', alignItems: 'center', padding: '0 12px', fontSize: 13, fontWeight: 600, color: '#ef4444' }}
+              >
+                Cerrar Sesión
+              </button>
             )}
-            {programUrl && (
-              <Link href={programUrl} className="gs-btn-secondary" style={{ fontSize: 13 }}>
-                Programa
-              </Link>
+            {!isAdmin ? (
+              <>
+                <Link 
+                  href="/" 
+                  className="gs-btn-secondary" 
+                  style={{ height: 32, display: 'flex', alignItems: 'center', padding: '0 12px', fontSize: 13, fontWeight: 600 }}
+                >
+                  Inicio
+                </Link>
+                <Link 
+                  href="/admin" 
+                  className="gs-btn-control"
+                  style={{ height: 32, display: 'flex', alignItems: 'center', padding: '0 12px', fontSize: 13, fontWeight: 600 }}
+                >
+                  Control
+                </Link>
+              </>
+            ) : (
+              <button
+                onClick={() => router.push('/')}
+                className="gs-btn-secondary"
+                style={{ height: 32, display: 'flex', alignItems: 'center', padding: '0 12px', fontSize: 13, fontWeight: 600 }}
+              >
+                Inicio
+              </button>
             )}
-            <Link href="/" style={{ fontSize: 13, color: '#666', padding: '6px 10px' }}>
-              Inicio
-            </Link>
-            <Link href="/admin" className="gs-btn-primary" style={{ fontSize: 13 }}>
-              Mesa de Control
-            </Link>
           </div>
-
-          {/* Mobile toggle */}
-          <button
-            type="button"
-            className="md:hidden"
-            onClick={() => setMobileOpen(!mobileOpen)}
-            style={{ padding: 8, color: '#111' }}
-          >
-            {mobileOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
         </div>
       </div>
-
-      {/* Mobile menu */}
-      {mobileOpen && (
-        <div style={{ background: '#fff', borderTop: '1px solid #e0e0e0', padding: '16px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <Link href="/" style={{ padding: '10px 8px', fontSize: 15, color: '#111', fontWeight: 500 }} onClick={() => setMobileOpen(false)}>
-              Inicio
-            </Link>
-            <Link href="/competiciones" style={{ padding: '10px 8px', fontSize: 15, color: '#111', fontWeight: 500 }} onClick={() => setMobileOpen(false)}>
-              Competiciones
-            </Link>
-            {programUrl && (
-              <Link href={programUrl} style={{ padding: '10px 8px', fontSize: 15, color: '#4C6FD9', fontWeight: 500 }} onClick={() => setMobileOpen(false)}>
-                Programa
-              </Link>
-            )}
-            <Link href="/admin" style={{ padding: '10px 8px', fontSize: 15, color: '#4C6FD9', fontWeight: 600 }} onClick={() => setMobileOpen(false)}>
-              Mesa de Control
-            </Link>
-          </div>
-        </div>
-      )}
     </nav>
   )
 }

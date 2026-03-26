@@ -1,103 +1,156 @@
+'use client'
+
+import { useEffect, useState, use } from 'react'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
 import { Navbar } from '@/shared/components/navbar'
 import { Footer } from '@/shared/components/footer'
-import { getCategory, getApparatusRankings } from '@/features/competitions/data/demo-data'
+import * as service from '@/features/competitions/services/competition-service'
 import { APPARATUS_NAMES, APPARATUS_ICONS, type Apparatus } from '@/features/competitions/types'
+import type { RankingEntry, Competition, Promotion } from '@/features/competitions/types'
 
 interface Props {
   params: Promise<{ slug: string; categoryId: string; apparatus: string }>
 }
 
-export default async function AparatoPage({ params }: Props) {
-  const { slug, categoryId, apparatus } = await params
-  const category = getCategory(categoryId)
-  if (!category) notFound()
+function MedalBadge({ pos }: { pos: number }) {
+  if (pos === 1) return <span style={{ width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FFF7ED', border: '1px solid #FFEDD5', borderRadius: '50%', color: '#D97706', fontWeight: 800, fontSize: 13 }}>1</span>
+  if (pos === 2) return <span style={{ width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F8FAFC', border: '1px solid #F1F5F9', borderRadius: '50%', color: '#64748B', fontWeight: 800, fontSize: 13 }}>2</span>
+  if (pos === 3) return <span style={{ width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FEF2F2', border: '1px solid #FEE2E2', borderRadius: '50%', color: '#B91C1C', fontWeight: 800, fontSize: 13 }}>3</span>
+  return <span style={{ width: 24, textAlign: 'center', fontWeight: 600, fontSize: 14, color: '#94A3B8' }}>{pos}</span>
+}
+
+export default function AparatoPage({ params: paramsPromise }: Props) {
+  const params = use(paramsPromise)
+  const { slug, categoryId, apparatus } = params
+  
+  const [competition, setCompetition] = useState<Competition | null>(null)
+  const [promotion, setPromotion] = useState<Promotion | null>(null)
+  const [rankings, setRankings] = useState<RankingEntry[]>([])
+  const [loading, setLoading] = useState(true)
 
   const apparatusKey = apparatus as Apparatus
   const apparatusName = APPARATUS_NAMES[apparatusKey]
-  if (!apparatusName) notFound()
 
-  const scores = getApparatusRankings(categoryId, apparatusKey)
+  useEffect(() => {
+    async function load() {
+      const comp = await service.getCompetitionBySlug(slug)
+      if (comp) setCompetition(comp)
+      
+      const prom = await service.getPromotionById(categoryId)
+      if (prom) {
+        setPromotion(prom)
+        const allRanks = await service.getRankings(prom.id)
+        
+        // Custom sort for specific apparatus
+        const apparatusRanks = allRanks.map(entry => {
+          let score = 0
+          if (apparatusKey === 'vault') score = entry.vaultScore
+          else if (apparatusKey === 'bars') score = entry.barsScore
+          else if (apparatusKey === 'beam') score = entry.beamScore
+          else if (apparatusKey === 'floor') score = entry.floorScore
+          
+          return { ...entry, appScore: score }
+        }).sort((a, b) => b.appScore - a.appScore)
+        
+        // Re-assign positions based on apparatus score
+        const ranked = apparatusRanks.map((e, idx) => ({ ...e, position: idx + 1 }))
+        setRankings(ranked)
+      }
+      setLoading(false)
+    }
+    load()
+  }, [slug, categoryId, apparatusKey])
+
+  if (loading) return <div style={{ padding: 40, textAlign: 'center', fontWeight: 'bold' }}>Cargando resultados de {apparatusName}...</div>
+  if (!promotion || !apparatusName) return <div style={{ padding: 40, textAlign: 'center' }}>Error cargando los datos.</div>
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--gs-bg)' }}>
-      <Navbar />
+      <Navbar programUrl={competition?.programUrl} showBack backHref={`/competiciones/${slug}/${categoryId}`} />
 
       <main style={{ flex: 1 }}>
         {/* Header */}
-        <div style={{ background: '#fff', borderBottom: '1px solid var(--gs-border)', padding: '28px 0' }}>
+        <div style={{ background: '#fff', padding: '32px 0 24px', borderBottom: '1px solid var(--gs-border)' }}>
+          <div className="gs-container" style={{ textAlign: 'center' }}>
+            <h2 style={{ fontSize: 13, fontWeight: 700, color: 'var(--gs-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>
+              COMPETICIÓN
+            </h2>
+            <h1 style={{ fontSize: 32, fontWeight: 900, color: '#111', marginBottom: 20, letterSpacing: '-0.03em', lineHeight: 1 }}>
+              {competition?.name || 'Cargando...'}
+            </h1>
+          </div>
+        </div>
+
+        {/* Apparatus Detail */}
+        <div style={{ background: '#fff', borderBottom: '1px solid var(--gs-border)', padding: '20px 0' }}>
           <div className="gs-container">
-            <div style={{ fontSize: 13, color: 'var(--gs-muted)', marginBottom: 8 }}>
-              <Link href="/" style={{ color: 'var(--gs-primary)' }}>Inicio</Link>
-              {' → '}
-              <Link href={`/competiciones/${slug}`} style={{ color: 'var(--gs-primary)' }}>{category.competitionName}</Link>
-              {' → '}
-              <Link href={`/competiciones/${slug}/${categoryId}`} style={{ color: 'var(--gs-primary)' }}>{category.name}</Link>
-              {' → '}
-              {apparatusName}
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
-              <img
-                src={APPARATUS_ICONS[apparatusKey]}
-                alt={apparatusName}
-                style={{ height: 32, width: 'auto' }}
-              />
-              <h1 style={{ fontSize: 22, fontWeight: 700 }}>
-                {apparatusName} — {category.name}
-              </h1>
-            </div>
-            <div style={{ fontSize: 14, color: 'var(--gs-muted)' }}>
-              {scores.length} participantes · Mejor nota: {scores[0]?.finalScore.toFixed(3) ?? '—'}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                <img
+                  src={APPARATUS_ICONS[apparatusKey]}
+                  alt={apparatusName}
+                  style={{ height: 40, width: 'auto' }}
+                />
+                <div>
+                  <h3 style={{ fontSize: 22, fontWeight: 800, color: 'var(--gs-text)', marginBottom: 2 }}>
+                    {apparatusName}
+                  </h3>
+                  <div style={{ fontSize: 14, color: 'var(--gs-muted)', fontWeight: 500 }}>
+                    {promotion.name}
+                  </div>
+                </div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--gs-muted)', textTransform: 'uppercase' }}>
+                  FECHA
+                </div>
+                <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--gs-text)' }}>
+                  {competition?.date ? new Date(competition.date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-'}
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Scores table */}
-        <div className="gs-container" style={{ padding: '24px 16px' }}>
-          <div className="gs-card" style={{ overflow: 'hidden' }}>
+        {/* Scores Table */}
+        <div className="gs-container" style={{ padding: '32px 16px' }}>
+          <div className="gs-card" style={{ overflow: 'hidden', padding: 0 }}>
             <div style={{ overflowX: 'auto' }}>
-              <table className="gs-table">
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
-                  <tr>
-                    <th style={{ width: 40 }}>#</th>
-                    <th>Gimnasta</th>
-                    <th>Club</th>
-                    <th style={{ textAlign: 'center' }}>Dificultad (D)</th>
-                    <th style={{ textAlign: 'center' }}>Ejecución (E)</th>
-                    <th style={{ textAlign: 'center' }}>Penalización</th>
-                    <th style={{ textAlign: 'right' }}>Nota Final</th>
+                  <tr style={{ borderBottom: '1px solid var(--gs-border)' }}>
+                    <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: 'var(--gs-muted)', textTransform: 'uppercase' }}>#</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: 'var(--gs-muted)', textTransform: 'uppercase' }}>Gimnasta</th>
+                    <th className="hidden md:table-cell" style={{ padding: '12px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: 'var(--gs-muted)', textTransform: 'uppercase' }}>Club</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: 11, fontWeight: 700, color: 'var(--gs-muted)', textTransform: 'uppercase' }}>Nota</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {scores.map((score, i) => (
-                    <tr key={i}>
-                      <td style={{ fontWeight: 600, color: 'var(--gs-muted)' }}>{score.position}</td>
-                      <td style={{ fontWeight: 500 }}>{score.gymnastName}</td>
-                      <td style={{ fontSize: 13, color: 'var(--gs-muted)' }}>{score.clubName}</td>
-                      <td style={{ textAlign: 'center', fontVariantNumeric: 'tabular-nums', fontSize: 14 }}>{score.dScore.toFixed(3)}</td>
-                      <td style={{ textAlign: 'center', fontVariantNumeric: 'tabular-nums', fontSize: 14 }}>{score.eScore.toFixed(3)}</td>
-                      <td style={{ textAlign: 'center', fontVariantNumeric: 'tabular-nums', fontSize: 14, color: score.penalty > 0 ? '#ef4444' : 'var(--gs-muted)' }}>
-                        {score.penalty > 0 ? `-${score.penalty.toFixed(1)}` : '—'}
-                      </td>
-                      <td style={{ textAlign: 'right', fontWeight: 700, fontSize: 15, fontVariantNumeric: 'tabular-nums' }}>
-                        {score.finalScore.toFixed(3)}
-                      </td>
-                    </tr>
-                  ))}
+                  {rankings.map((score) => {
+                    const val = (score as any).appScore
+                    return (
+                      <tr key={score.inscriptionId} style={{ borderBottom: '1px solid var(--gs-border)' }}>
+                        <td style={{ padding: '14px 16px' }}>
+                          <MedalBadge pos={score.position} />
+                        </td>
+                        <td style={{ padding: '14px 16px' }}>
+                          <div style={{ fontWeight: 700, color: 'var(--gs-text)', fontSize: 15 }}>{score.gymnastName}</div>
+                          <div className="md:hidden" style={{ fontSize: 12, color: 'var(--gs-muted)', marginTop: 2 }}>{score.clubName}</div>
+                        </td>
+                        <td className="hidden md:table-cell" style={{ padding: '14px 16px', color: 'var(--gs-muted)', fontSize: 14 }}>
+                          {score.clubName}
+                        </td>
+                        <td style={{ padding: '14px 16px', textAlign: 'right' }}>
+                          <div style={{ fontWeight: 800, fontSize: 16, color: 'var(--gs-primary)', fontVariantNumeric: 'tabular-nums' }}>
+                            {val.toFixed(3)}
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
-          </div>
-
-          <div style={{ marginTop: 12 }}>
-            <Link
-              href={`/competiciones/${slug}/${categoryId}`}
-              className="gs-btn-secondary"
-              style={{ fontSize: 13 }}
-            >
-              ← Volver a clasificación general
-            </Link>
           </div>
         </div>
       </main>

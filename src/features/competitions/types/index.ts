@@ -9,6 +9,7 @@ export interface CompetitionSession {
   competitionId: string
   name: string   // "Jornada 1", "Jornada Mañana", etc.
   date: string
+  location?: string
   order: number
 }
 

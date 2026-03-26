@@ -35,7 +35,7 @@ export default function CompeticionesPage() {
 
       <main style={{ flex: 1 }}>
         {/* Header */}
-        <div style={{ background: '#fff', borderBottom: '1px solid var(--gs-border)', padding: '32px 0 24px' }}>
+        <div className="gs-hero" style={{ background: '#fff', borderBottom: '1px solid var(--gs-border)', padding: '32px 0 24px' }}>
           <div className="gs-container">
             <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 20 }}>Competiciones</h1>
 
@@ -53,7 +53,7 @@ export default function CompeticionesPage() {
               </div>
 
               {/* Tabs */}
-              <div style={{ display: 'flex', gap: 4 }}>
+              <div className="gs-filter-tabs" style={{ display: 'flex', gap: 4 }}>
                 {(['all', 'active', 'finished'] as const).map((t) => (
                   <button
                     key={t}
@@ -83,28 +83,41 @@ export default function CompeticionesPage() {
           {filtered.length === 0 ? (
             <p style={{ color: 'var(--gs-muted)', padding: '40px 0', fontSize: 14 }}>Sin resultados.</p>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {filtered.map((comp) => (
                 <Link
                   key={comp.id}
                   href={`/competiciones/${comp.slug}`}
                   className="gs-card"
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', gap: 12 }}
+                  style={{ 
+                    display: 'block', 
+                    padding: '16px 20px', 
+                    textDecoration: 'none',
+                    position: 'relative'
+                  }}
                 >
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 600, fontSize: 15, color: 'var(--gs-text)', marginBottom: 3 }}>
+                  <div style={{ paddingRight: 80 }}>
+                    <div style={{ fontWeight: 700, fontSize: 16, color: 'var(--gs-text)', marginBottom: 4, lineHeight: 1.3 }}>
                       {comp.name}
                     </div>
-                    <div style={{ fontSize: 13, color: 'var(--gs-muted)' }}>
-                      {comp.location} · {formatDate(comp.date)}
+                    <div style={{ fontSize: 13, color: 'var(--gs-primary)', fontWeight: 600, marginBottom: 8 }}>
+                      {comp.categoryCount} categorías
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--gs-muted)', display: 'flex', flexWrap: 'wrap', gap: '4px 8px' }}>
+                      <span style={{ fontWeight: 500 }}>{formatDate(comp.date)}</span>
+                      {comp.location && (
+                        <>
+                          <span style={{ opacity: 0.5 }}>·</span>
+                          <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {comp.location}
+                          </span>
+                        </>
+                      )}
                     </div>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-                    <span style={{ fontSize: 13, color: 'var(--gs-muted)', whiteSpace: 'nowrap' }}>
-                      {comp.categoryCount} categorías
-                    </span>
+                  
+                  <div style={{ position: 'absolute', top: 16, right: 16 }}>
                     <StatusBadge status={comp.status} />
-                    <span style={{ color: 'var(--gs-primary)', fontSize: 13, fontWeight: 500 }}>→</span>
                   </div>
                 </Link>
               ))}

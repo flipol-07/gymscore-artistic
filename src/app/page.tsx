@@ -1,14 +1,15 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { useState } from 'react'
 import { Search } from 'lucide-react'
 import { Navbar } from '@/shared/components/navbar'
 import { Footer } from '@/shared/components/footer'
-import { searchCompetitions } from '@/features/competitions/data/demo-data'
+import * as service from '@/features/competitions/services/competition-service'
 import type { Competition } from '@/features/competitions/types'
 
 function formatDate(dateStr: string) {
+  if (!dateStr) return ''
   const d = new Date(dateStr)
   return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })
 }
@@ -21,7 +22,20 @@ function StatusBadge({ status }: { status: Competition['status'] }) {
 
 export default function Home() {
   const [query, setQuery] = useState('')
-  const competitions = searchCompetitions(query)
+  const [allCompetitions, setAllCompetitions] = useState<Competition[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    service.getCompetitions().then(data => {
+      setAllCompetitions(data)
+      setLoading(false)
+    })
+  }, [])
+
+  const filteredCompetitions = allCompetitions.filter(c =>
+    c.name.toLowerCase().includes(query.toLowerCase()) ||
+    c.location?.toLowerCase().includes(query.toLowerCase())
+  )
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--gs-bg)' }}>
@@ -29,7 +43,7 @@ export default function Home() {
 
       <main style={{ flex: 1 }}>
         {/* Hero header */}
-        <div style={{ background: '#fff', borderBottom: '1px solid var(--gs-border)', padding: '40px 0 32px' }}>
+        <div className="gs-hero" style={{ background: '#fff', borderBottom: '1px solid var(--gs-border)', padding: '40px 0 32px' }}>
           <div className="gs-container">
             <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--gs-text)', marginBottom: 6 }}>
               Resultados en directo
@@ -54,35 +68,48 @@ export default function Home() {
 
         {/* Competition list */}
         <div className="gs-container" style={{ padding: '24px 16px' }}>
-          {competitions.length === 0 ? (
+          {loading ? (
+            <p style={{ color: 'var(--gs-muted)', fontSize: 14, padding: '32px 0' }}>Cargando datos reales...</p>
+          ) : filteredCompetitions.length === 0 ? (
             <p style={{ color: 'var(--gs-muted)', fontSize: 14, padding: '32px 0' }}>
               No se encontraron competiciones.
             </p>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {competitions.map((comp) => (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {filteredCompetitions.map((comp) => (
                 <Link
                   key={comp.id}
                   href={`/competiciones/${comp.slug}`}
                   className="gs-card"
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', gap: 12, textDecoration: 'none' }}
+                  style={{ 
+                    display: 'block', 
+                    padding: '16px 20px', 
+                    textDecoration: 'none',
+                    position: 'relative'
+                  }}
                 >
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 600, fontSize: 15, color: 'var(--gs-text)', marginBottom: 3 }}>
+                  <div style={{ paddingRight: 80 }}>
+                    <div style={{ fontWeight: 700, fontSize: 16, color: 'var(--gs-text)', marginBottom: 4, lineHeight: 1.3 }}>
                       {comp.name}
                     </div>
-                    <div style={{ fontSize: 13, color: 'var(--gs-muted)' }}>
-                      {comp.location} · {formatDate(comp.date)}
+                    <div style={{ fontSize: 13, color: 'var(--gs-primary)', fontWeight: 600, marginBottom: 8 }}>
+                      {comp.categoryCount} categorías
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--gs-muted)', display: 'flex', flexWrap: 'wrap', gap: '4px 8px' }}>
+                      <span style={{ fontWeight: 500 }}>{formatDate(comp.date)}</span>
+                      {comp.location && (
+                        <>
+                          <span style={{ opacity: 0.5 }}>·</span>
+                          <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {comp.location}
+                          </span>
+                        </>
+                      )}
                     </div>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-                    <span style={{ fontSize: 13, color: 'var(--gs-muted)', whiteSpace: 'nowrap' }}>
-                      {comp.categoryCount} categorías
-                    </span>
+                  
+                  <div style={{ position: 'absolute', top: 16, right: 16 }}>
                     <StatusBadge status={comp.status} />
-                    <span style={{ fontSize: 13, color: 'var(--gs-primary)', fontWeight: 500, whiteSpace: 'nowrap' }}>
-                      Ver resultados →
-                    </span>
                   </div>
                 </Link>
               ))}

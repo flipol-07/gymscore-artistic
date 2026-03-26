@@ -66,9 +66,17 @@
 @layer components {
   /* Card base */
   .gs-card {
-    background: var(--gs-white);
+    background: #fff;
+    border-radius: 12px;
     border: 1px solid var(--gs-border);
-    border-radius: 8px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+
+  .gs-card:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    border-color: #d1d5db;
+    transform: translateY(-2px);
   }
 
   /* Buttons */
@@ -105,6 +113,40 @@
     background: var(--gs-bg);
   }
 
+  .gs-btn-nav {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    background: #f5f5f5;
+    color: var(--gs-muted);
+    transition: all 0.2s;
+    border: none;
+    cursor: pointer;
+  }
+  .gs-btn-nav:hover {
+    background: #e5e5e5;
+    color: var(--gs-text);
+  }
+
+  .gs-btn-control {
+    background: #111;
+    color: #fff;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    transition: background 0.2s;
+    border: none;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .gs-btn-control:hover {
+    background: #333;
+  }
+
   /* Badges */
   .gs-badge {
     display: inline-flex;
@@ -126,13 +168,12 @@
     border: 1px solid #bbf7d0;
   }
   .gs-badge-finished {
-    background: #f9fafb;
-    color: var(--gs-muted);
-    border: 1px solid var(--gs-border);
+    background: #f3f4f6;
+    color: #4b5563;
   }
   .gs-badge-female {
     background: #fdf2f8;
-    color: var(--gs-female);
+    color: #be185d;
     border: 1px solid #fbcfe8;
   }
   .gs-badge-male {
@@ -192,5 +233,133 @@
     max-width: 960px;
     margin: 0 auto;
     padding: 0 16px;
+  }
+
+  /* Competition card - responsive layout */
+  .gs-comp-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    gap: 12px;
+    text-decoration: none;
+  }
+
+  .gs-comp-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
+  /* Promotion row - responsive layout */
+  .gs-promo-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    gap: 12px;
+  }
+
+  .gs-promo-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+}
+
+/* ═══════════════════════════════════════════════ */
+/* Mobile responsive overrides                     */
+/* ═══════════════════════════════════════════════ */
+@media (max-width: 640px) {
+  /* Competition cards: stack vertically */
+  .gs-comp-card {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 14px 16px;
+    gap: 10px;
+  }
+
+  .gs-comp-card-meta {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* Promotion rows: stack vertically */
+  .gs-promo-row {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 12px 14px;
+    gap: 10px;
+  }
+
+  .gs-promo-meta {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* Smaller hero padding */
+  .gs-hero {
+    padding: 24px 0 20px !important;
+  }
+
+  .gs-hero h1 {
+    font-size: 22px !important;
+  }
+
+  /* Breadcrumbs wrap nicely */
+  .gs-breadcrumb {
+    word-break: break-word;
+    line-height: 1.6;
+  }
+
+  /* Event header: stack on mobile */
+  .gs-event-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+
+  /* Apparatus tabs: more compact */
+  .gs-apparatus-tabs {
+    gap: 0;
+  }
+  .gs-apparatus-tabs a {
+    padding: 10px 12px !important;
+    font-size: 12px !important;
+  }
+
+  /* Tables: ensure horizontal scroll */
+  .gs-table {
+    font-size: 13px;
+  }
+  .gs-table th {
+    padding: 8px 8px;
+    font-size: 10px;
+  }
+  .gs-table td {
+    padding: 10px 8px;
+    font-size: 13px;
+  }
+
+  /* Badges: slightly smaller on mobile */
+  .gs-badge {
+    font-size: 11px;
+    padding: 2px 6px;
+  }
+
+  /* Filter tabs wrap on mobile */
+  .gs-filter-tabs {
+    flex-wrap: wrap;
+  }
+
+  /* Admin card row: stack */
+  .gs-admin-card-row {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 10px;
   }
 }

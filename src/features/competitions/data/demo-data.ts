@@ -72,6 +72,7 @@ const competitions: Competition[] = [
     date: '2026-04-12',
     status: 'draft',
     categoryCount: 5,
+    programUrl: '/files/programa-portuense.pdf'
   },
 ]
 
@@ -619,9 +620,9 @@ const sessions: CompetitionSession[] = [
   { id: 'ses-3-3', competitionId: 'comp-3', name: 'Jornada 3', date: '2026-02-08', order: 3 },
   { id: 'ses-4-1', competitionId: 'comp-4', name: 'Jornada 1 - Mañana', date: '2026-03-22', order: 1 },
   { id: 'ses-4-2', competitionId: 'comp-4', name: 'Jornada 2 - Tarde', date: '2026-03-22', order: 2 },
-  { id: 'ses-5-1', competitionId: 'comp-5', name: 'Jornada 1', date: '2026-04-12', order: 1 },
-  { id: 'ses-5-2', competitionId: 'comp-5', name: 'Jornada 2', date: '2026-04-12', order: 2 },
-  { id: 'ses-5-3', competitionId: 'comp-5', name: 'Jornada 3', date: '2026-04-12', order: 3 },
+  { id: 'ses-5-1', competitionId: 'comp-5', name: 'Jornada 1', date: '2026-04-12', location: 'Pabellón El Puerto', order: 1 },
+  { id: 'ses-5-2', competitionId: 'comp-5', name: 'Jornada 2', date: '2026-04-12', location: 'Centro Deportivo Portuense', order: 2 },
+  { id: 'ses-5-3', competitionId: 'comp-5', name: 'Jornada 3', date: '2026-04-13', location: 'Polideportivo Municipal', order: 3 },
 ]
 
 // ─── Promotions ──────────────────────────────────────────────────────────────

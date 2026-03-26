@@ -1,135 +1,184 @@
+'use client'
+
+import { useEffect, useState, use } from 'react'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
 import { Navbar } from '@/shared/components/navbar'
 import { Footer } from '@/shared/components/footer'
-import { getCompetition, getSessions, getPromotions } from '@/features/competitions/data/demo-data'
-import type { Promotion } from '@/features/competitions/types'
-
-interface Props {
-  params: Promise<{ slug: string }>
-}
+import * as service from '@/features/competitions/services/competition-service'
+import type { Competition, CompetitionSession, Promotion } from '@/features/competitions/types'
 
 function formatDate(dateStr: string) {
+  if (!dateStr) return ''
   return new Date(dateStr).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
-function PromotionStatusBadge({ status }: { status: Promotion['status'] }) {
-  if (status === 'active') return <span className="gs-badge gs-badge-live">● En directo</span>
-  if (status === 'finished') return <span className="gs-badge gs-badge-finished">Finalizado</span>
-  return <span className="gs-badge gs-badge-finished">Pendiente</span>
+function GenderBadge({ gender }: { gender: Promotion['gender'] }) {
+  const isFemale = gender === 'female'
+  return (
+    <span 
+      className={isFemale ? 'gs-badge gs-badge-female' : 'gs-badge gs-badge-male'}
+      style={{ fontSize: 11, textTransform: 'uppercase' }}
+    >
+      {isFemale ? 'Femenino' : 'Masculino'}
+    </span>
+  )
 }
 
-export default async function EventoPage({ params }: Props) {
-  const { slug } = await params
-  const competition = getCompetition(slug)
-  if (!competition) notFound()
+export default function EventoPage({ params: paramsPromise }: { params: Promise<{ slug: string }> }) {
+  const params = use(paramsPromise)
+  const { slug } = params
+  
+  const [competition, setCompetition] = useState<Competition | null>(null)
+  const [sessions, setSessions] = useState<CompetitionSession[]>([])
+  const [activeSessionId, setActiveSessionId] = useState('')
+  const [promotions, setPromotions] = useState<Promotion[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const sessions = getSessions(slug)
+  useEffect(() => {
+    async function load() {
+      const comp = await service.getCompetitionBySlug(slug)
+      if (comp) {
+        setCompetition(comp)
+        const sess = await service.getSessions(comp.id)
+        setSessions(sess)
+        if (sess.length > 0) setActiveSessionId(sess[0].id)
+      }
+      setLoading(false)
+    }
+    load()
+  }, [slug])
+
+  useEffect(() => {
+    if (activeSessionId) {
+      service.getPromotions(activeSessionId).then(setPromotions)
+    }
+  }, [activeSessionId])
+
+  if (loading) return <div style={{ padding: 40, textAlign: 'center', fontWeight: 'bold' }}>Cargando datos reales...</div>
+  if (!competition) return <div style={{ padding: 40, textAlign: 'center' }}>Competición no encontrada.</div>
+
+  const activeSession = sessions.find(s => s.id === activeSessionId)
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--gs-bg)' }}>
-      <Navbar />
+      <Navbar showBack backHref="/" />
 
       <main style={{ flex: 1 }}>
-        {/* Event header */}
-        <div style={{ background: '#fff', borderBottom: '1px solid var(--gs-border)', padding: '28px 0' }}>
+        {/* Event Header */}
+        <div style={{ background: '#fff', borderBottom: '1px solid var(--gs-border)', padding: '32px 0 24px' }}>
           <div className="gs-container">
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
-              <div>
-                <div style={{ fontSize: 13, color: 'var(--gs-muted)', marginBottom: 6 }}>
-                  <Link href="/" style={{ color: 'var(--gs-primary)' }}>Inicio</Link>
-                  {' → '}
-                  {competition.name}
-                </div>
-                <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--gs-text)', marginBottom: 6 }}>
-                  {competition.name}
-                </h1>
-                <div style={{ fontSize: 14, color: 'var(--gs-muted)' }}>
-                  {competition.location} · {formatDate(competition.date)}
-                </div>
+            <h1 style={{ fontSize: 26, fontWeight: 800, color: 'var(--gs-text)', marginBottom: 12, lineHeight: 1.2 }}>
+              {competition.name}
+            </h1>
+            
+            {competition.programUrl ? (
+              <a 
+                href={competition.programUrl} 
+                className="gs-btn-primary" 
+                style={{ fontSize: 13, padding: '8px 16px', textDecoration: 'none' }}
+                download
+              >
+                Descargar Programa (PDF)
+              </a>
+            ) : (
+              <button 
+                className="gs-btn-secondary" 
+                style={{ fontSize: 13, opacity: 0.6, cursor: 'not-allowed' }}
+                disabled
+              >
+                Programa no disponible
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Sessions Selector */}
+        <div style={{ background: '#fff', borderBottom: '1px solid var(--gs-border)', padding: '12px 0' }}>
+          <div className="gs-container">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: 6 }}>
+                {sessions.map((s, idx) => (
+                  <button
+                    key={s.id}
+                    onClick={() => setActiveSessionId(s.id)}
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: 6,
+                      fontSize: 13,
+                      fontWeight: 600,
+                      border: '1px solid',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      background: activeSessionId === s.id ? 'var(--gs-text)' : '#f9fafb',
+                      color: activeSessionId === s.id ? '#fff' : 'var(--gs-muted)',
+                      borderColor: activeSessionId === s.id ? 'var(--gs-text)' : 'var(--gs-border)',
+                    }}
+                  >
+                    Jornada {idx + 1}
+                  </button>
+                ))}
               </div>
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
-                {competition.status === 'active' && (
-                  <span className="gs-badge gs-badge-live">● En directo</span>
-                )}
-                {competition.programUrl && (
-                  <Link href={competition.programUrl} className="gs-btn-secondary" style={{ fontSize: 13 }}>
-                    Programa
-                  </Link>
-                )}
-              </div>
+
+              {activeSession && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 200 }}>
+                  <div style={{ height: 24, width: 1, background: 'var(--gs-border)', display: 'none' }} className="sm:block" />
+                  <div style={{ fontSize: 13, color: 'var(--gs-muted)' }}>
+                    <div style={{ fontWeight: 600, color: 'var(--gs-text)', marginBottom: 2 }}>
+                      {formatDate(activeSession.date)}
+                    </div>
+                    <a 
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(activeSession.location || competition.location)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: 'var(--gs-primary)', textDecoration: 'none', fontSize: 12, fontWeight: 500 }}
+                    >
+                      📍 Ver ubicación
+                    </a>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Sessions + Promotions */}
+        {/* Promotions Grid */}
         <div className="gs-container" style={{ padding: '24px 16px' }}>
-          {sessions.length === 0 ? (
-            <p style={{ color: 'var(--gs-muted)', fontSize: 14 }}>No hay jornadas disponibles.</p>
+          {promotions.length === 0 ? (
+            <p style={{ color: 'var(--gs-muted)', fontSize: 14 }}>No hay categorías para esta jornada.</p>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-              {sessions.map((session) => {
-                const promotions = getPromotions(session.id)
-                return (
-                  <div key={session.id}>
-                    {/* Session header */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-                      <h2 style={{ fontSize: 15, fontWeight: 600, color: 'var(--gs-text)' }}>
-                        {session.name}
-                      </h2>
-                      <span style={{ fontSize: 13, color: 'var(--gs-muted)' }}>
-                        · {formatDate(session.date)}
-                      </span>
-                    </div>
-
-                    {/* Promotions table-style list */}
-                    <div className="gs-card" style={{ overflow: 'hidden' }}>
-                      {promotions.length === 0 ? (
-                        <p style={{ padding: '16px', fontSize: 14, color: 'var(--gs-muted)' }}>Sin categorías.</p>
-                      ) : (
-                        promotions.map((prom, i) => (
-                          <div
-                            key={prom.id}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'space-between',
-                              padding: '14px 16px',
-                              borderBottom: i < promotions.length - 1 ? '1px solid var(--gs-border)' : 'none',
-                              gap: 12,
-                            }}
-                          >
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <span style={{ fontWeight: 500, fontSize: 14, color: 'var(--gs-text)' }}>
-                                {prom.name}
-                              </span>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-                              <span style={{ fontSize: 13, color: 'var(--gs-muted)', whiteSpace: 'nowrap' }}>
-                                {prom.gymnast_count} gimnastas
-                              </span>
-                              <PromotionStatusBadge status={prom.status} />
-                              {prom.status !== 'pending' ? (
-                                <Link
-                                  href={`/competiciones/${slug}/${prom.categoryId}`}
-                                  className="gs-btn-primary"
-                                  style={{ fontSize: 13, padding: '6px 12px' }}
-                                >
-                                  {prom.status === 'active' ? 'Ver notas →' : 'Ver resultados →'}
-                                </Link>
-                              ) : (
-                                <span style={{ fontSize: 13, color: 'var(--gs-muted)', padding: '6px 12px' }}>
-                                  Pendiente
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+              {promotions.map((prom) => (
+                <div key={prom.id} className="gs-card" style={{ padding: '16px 20px', position: 'relative', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div style={{ position: 'absolute', top: 16, right: 16 }}>
+                    <GenderBadge gender={prom.gender} />
                   </div>
-                )
-              })}
+
+                  <div>
+                    <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--gs-text)', marginBottom: 4, paddingRight: 80 }}>
+                      {prom.name}
+                    </h3>
+                    <p style={{ fontSize: 13, color: 'var(--gs-muted)' }}>
+                      {prom.gymnast_count} gimnastas inscritos
+                    </p>
+                  </div>
+
+                  <div style={{ marginTop: 'auto', paddingTop: 8 }}>
+                    {prom.status !== 'pending' ? (
+                      <Link
+                        href={`/competiciones/${slug}/${prom.id}`}
+                        className="gs-btn-primary"
+                        style={{ fontSize: 13, width: '100%', justifyContent: 'center' }}
+                      >
+                        {prom.status === 'active' ? 'Ver notas en directo' : 'Ver resultados finales'}
+                      </Link>
+                    ) : (
+                      <span className="gs-btn-secondary" style={{ fontSize: 13, width: '100%', justifyContent: 'center', opacity: 0.6, cursor: 'not-allowed' }}>
+                        Próximamente
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>

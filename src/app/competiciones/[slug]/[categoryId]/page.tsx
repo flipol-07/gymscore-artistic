@@ -1,86 +1,106 @@
+'use client'
+
+import { useEffect, useState, use } from 'react'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
 import { Navbar } from '@/shared/components/navbar'
 import { Footer } from '@/shared/components/footer'
-import { getCategory, getRankings } from '@/features/competitions/data/demo-data'
-import { FEMALE_APPARATUS, MALE_APPARATUS, APPARATUS_NAMES, type Apparatus } from '@/features/competitions/types'
+import * as service from '@/features/competitions/services/competition-service'
+import { FEMALE_APPARATUS, MALE_APPARATUS, type Apparatus } from '@/features/competitions/types'
 import { RankingsTable } from '@/features/competitions/components/rankings-table'
+import type { RankingEntry, Competition, Promotion } from '@/features/competitions/types'
 
 interface Props {
   params: Promise<{ slug: string; categoryId: string }>
 }
 
-export default async function ResultadosPage({ params }: Props) {
-  const { slug, categoryId } = await params
-  const category = getCategory(categoryId)
-  if (!category) notFound()
+export default function ResultadosPage({ params: paramsPromise }: Props) {
+  const params = use(paramsPromise)
+  const { slug, categoryId } = params
+  
+  const [competition, setCompetition] = useState<Competition | null>(null)
+  const [promotion, setPromotion] = useState<Promotion | null>(null)
+  const [rankings, setRankings] = useState<RankingEntry[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const rankings = getRankings(categoryId)
-  const apparatus: Apparatus[] = category.gender === 'female' ? FEMALE_APPARATUS : MALE_APPARATUS
+  useEffect(() => {
+    async function load() {
+      const comp = await service.getCompetitionBySlug(slug)
+      if (comp) setCompetition(comp)
+      
+      const prom = await service.getPromotionById(categoryId)
+      if (prom) {
+        setPromotion(prom)
+        const ranks = await service.getRankings(prom.id)
+        setRankings(ranks)
+      }
+      setLoading(false)
+    }
+    load()
+  }, [slug, categoryId])
+
+  if (loading) return <div style={{ padding: 40, textAlign: 'center', fontWeight: 'bold' }}>Cargando resultados...</div>
+  if (!promotion) return <div style={{ padding: 40, textAlign: 'center' }}>Categoría no encontrada.</div>
+
+  const apparatus: Apparatus[] = promotion.gender === 'female' ? FEMALE_APPARATUS : MALE_APPARATUS
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--gs-bg)' }}>
-      <Navbar />
+      <Navbar programUrl={competition?.programUrl} showBack backHref={`/competiciones/${slug}`} />
 
       <main style={{ flex: 1 }}>
-        {/* Header */}
-        <div style={{ background: '#fff', borderBottom: '1px solid var(--gs-border)', padding: '28px 0' }}>
-          <div className="gs-container">
-            <div style={{ fontSize: 13, color: 'var(--gs-muted)', marginBottom: 8 }}>
-              <Link href="/" style={{ color: 'var(--gs-primary)' }}>Inicio</Link>
-              {' → '}
-              <Link href={`/competiciones/${slug}`} style={{ color: 'var(--gs-primary)' }}>
-                {category.competitionName}
-              </Link>
-              {' → '}
-              {category.name}
-            </div>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--gs-text)', marginBottom: 4 }}>
-              {category.name}
+        {/* Event Header */}
+        <div style={{ background: '#fff', padding: '32px 0 24px', borderBottom: '1px solid var(--gs-border)' }}>
+          <div className="gs-container" style={{ textAlign: 'center' }}>
+            <h2 style={{ fontSize: 13, fontWeight: 700, color: 'var(--gs-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>
+              COMPETICIÓN
+            </h2>
+            <h1 style={{ fontSize: 32, fontWeight: 900, color: '#111', marginBottom: 20, letterSpacing: '-0.03em', lineHeight: 1 }}>
+              {competition?.name || 'Cargando...'}
             </h1>
-            <div style={{ fontSize: 14, color: 'var(--gs-muted)' }}>
-              {category.gender === 'female' ? 'Gimnasia Artística Femenina (GAF)' : 'Gimnasia Artística Masculina (GAM)'}
-              {' · '}{rankings.length} gimnastas
+            
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 12 }}>
+              {competition?.programUrl && (
+                <a 
+                  href={competition.programUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="gs-btn-secondary"
+                  style={{ padding: '8px 24px', borderRadius: 10, fontWeight: 700, fontSize: 14, textDecoration: 'none' }}
+                >
+                  Programa
+                </a>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Apparatus tabs */}
-        <div style={{ background: '#fff', borderBottom: '1px solid var(--gs-border)' }}>
-          <div className="gs-container" style={{ display: 'flex', gap: 0, overflowX: 'auto' }}>
-            <Link
-              href={`/competiciones/${slug}/${categoryId}`}
-              style={{
-                padding: '12px 16px',
-                fontSize: 13,
-                fontWeight: 600,
-                color: 'var(--gs-primary)',
-                borderBottom: '2px solid var(--gs-primary)',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              General
-            </Link>
-            {apparatus.map((app) => (
-              <Link
-                key={app}
-                href={`/competiciones/${slug}/${categoryId}/${app}`}
-                style={{
-                  padding: '12px 16px',
-                  fontSize: 13,
-                  color: 'var(--gs-muted)',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {APPARATUS_NAMES[app]}
-              </Link>
-            ))}
+        {/* Category Details */}
+        <div style={{ background: '#fff', borderBottom: '1px solid var(--gs-border)', padding: '20px 0' }}>
+          <div className="gs-container">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div>
+                <h3 style={{ fontSize: 22, fontWeight: 800, color: 'var(--gs-text)', marginBottom: 2 }}>
+                  {promotion.name}
+                </h3>
+                <div style={{ fontSize: 14, color: 'var(--gs-muted)', fontWeight: 500 }}>
+                  {promotion.gender === 'female' ? 'Femenino' : 'Masculino'}
+                </div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--gs-muted)', textTransform: 'uppercase' }}>
+                  FECHA
+                </div>
+                <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--gs-text)' }}>
+                  {competition?.date ? new Date(competition.date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-'}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Rankings table */}
-        <div className="gs-container" style={{ padding: '24px 16px' }}>
-          <div className="gs-card" style={{ overflow: 'hidden' }}>
+        <div className="gs-container" style={{ padding: '32px 16px' }}>
+          <div className="gs-card" style={{ overflow: 'hidden', padding: 0 }}>
             <RankingsTable
               rankings={rankings}
               apparatus={apparatus}

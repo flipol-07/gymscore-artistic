@@ -1,6 +1,6 @@
 'use client'
 
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Navbar } from '@/shared/components/navbar'
 import { Footer } from '@/shared/components/footer'
@@ -9,6 +9,7 @@ import { FEMALE_APPARATUS, APPARATUS_NAMES, APPARATUS_ICONS } from '@/features/c
 
 export default function GymnastProfilePage() {
   const params = useParams()
+  const router = useRouter()
   const name = decodeURIComponent(params.name as string)
   const history = getGymnastHistory(name)
 
@@ -17,80 +18,84 @@ export default function GymnastProfilePage() {
       <Navbar />
 
       <main style={{ flex: 1 }}>
-        {/* Header */}
-        <div style={{ background: '#fff', borderBottom: '1px solid var(--gs-border)', padding: '28px 0' }}>
+        {/* Centered Name Header (Sketch) */}
+        <div style={{ background: '#fff', padding: '40px 0 32px', borderBottom: '1px solid var(--gs-border)', textAlign: 'center' }}>
           <div className="gs-container">
-            <div style={{ fontSize: 13, color: 'var(--gs-muted)', marginBottom: 8 }}>
-              <Link href="/" style={{ color: 'var(--gs-primary)' }}>Inicio</Link>
-              {' → Gimnasta'}
-            </div>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--gs-text)', marginBottom: 4 }}>
+            <h2 style={{ fontSize: 13, fontWeight: 700, color: 'var(--gs-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>
+              GIMNASTA
+            </h2>
+            <h1 style={{ fontSize: 36, fontWeight: 900, color: '#111', marginBottom: 24, letterSpacing: '-0.03em', lineHeight: 1 }}>
               {name}
             </h1>
-            {history.length > 0 && (
-              <div style={{ fontSize: 14, color: 'var(--gs-muted)' }}>
-                {history[0].clubName} · {history.length} competición{history.length !== 1 ? 'es' : ''}
-              </div>
-            )}
+            
+            <button 
+              onClick={() => router.back()}
+              className="gs-btn-secondary"
+              style={{ padding: '8px 24px', borderRadius: 10, fontWeight: 700, fontSize: 14 }}
+            >
+              ← Atrás
+            </button>
           </div>
         </div>
 
-        <div className="gs-container" style={{ padding: '24px 16px' }}>
+        <div className="gs-container" style={{ padding: '32px 16px' }}>
+          <h3 style={{ fontSize: 18, fontWeight: 800, color: 'var(--gs-text)', marginBottom: 20 }}>
+            Historial de Competiciones
+          </h3>
+
           {history.length === 0 ? (
-            <div style={{ padding: '40px 0', textAlign: 'center' }}>
-              <p style={{ color: 'var(--gs-muted)', fontSize: 14, marginBottom: 16 }}>
+            <div className="gs-card" style={{ padding: '48px 0', textAlign: 'center' }}>
+              <p style={{ color: 'var(--gs-muted)', fontSize: 15 }}>
                 No se encontró historial para este gimnasta.
               </p>
-              <Link href="/" className="gs-btn-secondary">Volver al inicio</Link>
             </div>
           ) : (
-            <div className="gs-card" style={{ overflow: 'hidden' }}>
+            <div className="gs-card" style={{ overflow: 'hidden', padding: 0 }}>
               <div style={{ overflowX: 'auto' }}>
-                <table className="gs-table" style={{ minWidth: 600 }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
-                    <tr>
-                      <th>Competición</th>
-                      <th>Fecha</th>
-                      <th>Categoría</th>
-                      <th>Club</th>
+                    <tr style={{ borderBottom: '1px solid var(--gs-border)' }}>
+                      <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: 'var(--gs-muted)', textTransform: 'uppercase' }}>Competición</th>
+                      <th className="hidden md:table-cell" style={{ padding: '12px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: 'var(--gs-muted)', textTransform: 'uppercase' }}>Club</th>
                       {FEMALE_APPARATUS.map(app => (
-                        <th key={app} style={{ textAlign: 'center' }}>
+                        <th key={app} style={{ padding: '12px', textAlign: 'center' }}>
                           <div style={{ display: 'flex', justifyContent: 'center' }} title={APPARATUS_NAMES[app]}>
                             <img
                               src={APPARATUS_ICONS[app]}
                               alt={APPARATUS_NAMES[app]}
-                              style={{ height: 18, width: 'auto', opacity: 0.7 }}
+                              style={{ height: 18, width: 'auto', opacity: 0.8 }}
                             />
                           </div>
                         </th>
                       ))}
-                      <th style={{ textAlign: 'right' }}>Total</th>
-                      <th></th>
+                      <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: 11, fontWeight: 700, color: 'var(--gs-muted)', textTransform: 'uppercase' }}>Total</th>
                     </tr>
                   </thead>
                   <tbody>
                     {history.map((item, idx) => (
-                      <tr key={`${item.categoryId}-${idx}`}>
-                        <td style={{ fontWeight: 500, fontSize: 14 }}>{item.competitionName}</td>
-                        <td style={{ color: 'var(--gs-muted)', fontSize: 13, whiteSpace: 'nowrap' }}>
-                          {new Date(item.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      <tr 
+                        key={`${item.categoryId}-${idx}`}
+                        onClick={() => router.push(`/competiciones/${item.competitionSlug}/${item.categoryId}`)}
+                        style={{ borderBottom: '1px solid var(--gs-border)', cursor: 'pointer', transition: 'background 0.2s' }}
+                        className="hover:bg-slate-50"
+                      >
+                        <td style={{ padding: '16px' }}>
+                          <div style={{ fontWeight: 700, color: 'var(--gs-text)', fontSize: 15, marginBottom: 4 }}>{item.competitionName}</div>
+                          <div style={{ fontSize: 12, color: 'var(--gs-muted)', fontWeight: 500 }}>
+                            {item.categoryName} <span style={{ margin: '0 4px', opacity: 0.5 }}>·</span> {new Date(item.date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                          </div>
                         </td>
-                        <td style={{ fontSize: 13 }}>{item.categoryName}</td>
-                        <td style={{ fontSize: 13, color: 'var(--gs-muted)' }}>{item.clubName}</td>
-                        <td style={{ textAlign: 'center', fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{item.vaultScore.toFixed(3)}</td>
-                        <td style={{ textAlign: 'center', fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{item.barsScore.toFixed(3)}</td>
-                        <td style={{ textAlign: 'center', fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{item.beamScore.toFixed(3)}</td>
-                        <td style={{ textAlign: 'center', fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{item.floorScore.toFixed(3)}</td>
-                        <td style={{ textAlign: 'right', fontWeight: 700, fontSize: 15, fontVariantNumeric: 'tabular-nums' }}>
-                          {item.totalScore.toFixed(3)}
+                        <td className="hidden md:table-cell" style={{ padding: '16px', color: 'var(--gs-muted)', fontSize: 14 }}>
+                          {item.clubName}
                         </td>
-                        <td>
-                          <Link
-                            href={`/competiciones/${item.competitionSlug}/${item.categoryId}`}
-                            style={{ fontSize: 13, color: 'var(--gs-primary)' }}
-                          >
-                            Ver →
-                          </Link>
+                        <td style={{ padding: '16px', textAlign: 'center', fontVariantNumeric: 'tabular-nums', fontSize: 14, fontWeight: 500 }}>{item.vaultScore.toFixed(3)}</td>
+                        <td style={{ padding: '16px', textAlign: 'center', fontVariantNumeric: 'tabular-nums', fontSize: 14, fontWeight: 500 }}>{item.barsScore.toFixed(3)}</td>
+                        <td style={{ padding: '16px', textAlign: 'center', fontVariantNumeric: 'tabular-nums', fontSize: 14, fontWeight: 500 }}>{item.beamScore.toFixed(3)}</td>
+                        <td style={{ padding: '16px', textAlign: 'center', fontVariantNumeric: 'tabular-nums', fontSize: 14, fontWeight: 500 }}>{item.floorScore.toFixed(3)}</td>
+                        <td style={{ padding: '16px', textAlign: 'right' }}>
+                          <div style={{ fontWeight: 800, fontSize: 16, color: 'var(--gs-primary)', fontVariantNumeric: 'tabular-nums' }}>
+                            {item.totalScore.toFixed(3)}
+                          </div>
                         </td>
                       </tr>
                     ))}
