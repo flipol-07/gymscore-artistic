@@ -357,15 +357,16 @@ export default function AdminCompeticionPage() {
           {/* Main Content (Mesa view) */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <span style={{ fontSize: 18, fontWeight: 800, color: 'var(--gs-text)' }}>
-              Jornada
+              Configuración de Jornada (Muestreo)
             </span>
             <a 
               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(competition.location)}`}
               target="_blank"
               rel="noopener noreferrer"
-              style={{ fontSize: 13, fontWeight: 700, color: 'var(--gs-muted)', textTransform: 'uppercase', textDecorationLine: 'underline', textDecorationStyle: 'dotted', textUnderlineOffset: '4px' }}
+              className="gs-btn-secondary"
+              style={{ padding: '6px 12px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 6 }}
             >
-              {competition.location}
+              📍 {competition.location}
             </a>
           </div>
 

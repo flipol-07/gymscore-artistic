@@ -130,9 +130,10 @@ export default function EventoPage({ params: paramsPromise }: { params: Promise<
                       href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(activeSession.location || competition.location)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      style={{ color: 'var(--gs-primary)', textDecoration: 'none', fontSize: 12, fontWeight: 500 }}
+                      className="gs-btn-secondary"
+                      style={{ display: 'inline-flex', padding: '6px 12px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', textDecoration: 'none', gap: 6, width: 'fit-content' }}
                     >
-                      📍 Ver ubicación
+                      📍 {competition.location}
                     </a>
                   </div>
                 </div>
