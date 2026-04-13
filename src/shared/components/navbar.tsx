@@ -77,12 +77,18 @@ export function Navbar({
                   const { createClient } = await import('@/lib/supabase/client')
                   const supabase = createClient()
                   await supabase.auth.signOut()
-                  router.push('/admin')
+                  if (typeof window !== 'undefined') {
+                    // Clear all event auths
+                    Object.keys(sessionStorage).forEach(key => {
+                      if (key.startsWith('event_auth_')) sessionStorage.removeItem(key)
+                    })
+                  }
+                  router.push('/')
                 }}
                 className="gs-btn-secondary"
                 style={{ height: 32, display: 'flex', alignItems: 'center', padding: '0 12px', fontSize: 13, fontWeight: 600, color: '#ef4444' }}
               >
-                Cerrar Sesión
+                Cerrar
               </button>
             )}
             {!isAdmin ? (
@@ -93,6 +99,13 @@ export function Navbar({
                   style={{ height: 32, display: 'flex', alignItems: 'center', padding: '0 12px', fontSize: 13, fontWeight: 600 }}
                 >
                   Inicio
+                </Link>
+                <Link 
+                  href="/gimnastas" 
+                  className="gs-btn-secondary" 
+                  style={{ height: 32, display: 'flex', alignItems: 'center', padding: '0 12px', fontSize: 13, fontWeight: 600 }}
+                >
+                  Gimnastas
                 </Link>
                 <Link 
                   href="/admin" 

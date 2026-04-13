@@ -267,6 +267,18 @@
     gap: 12px;
     flex-shrink: 0;
   }
+
+  /* Gymnast name link in rankings */
+  .gymnast-link:hover {
+    color: var(--gs-primary);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  /* Table row hover */
+  .ranking-row:hover td {
+    background: #F8FAFC;
+  }
 }
 
 /* ═══════════════════════════════════════════════ */
@@ -361,5 +373,34 @@
     flex-direction: column;
     align-items: flex-start !important;
     gap: 10px;
+  }
+}
+
+/* ═══════════════════════════════════════════════ */
+/* Print overrides (Native print A4 Landscape)       */
+/* ═══════════════════════════════════════════════ */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-diploma, .print-diploma * {
+    visibility: visible;
+  }
+  .print-diploma {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 297mm !important;
+    height: 210mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    background: #FAFAF8 !important;
+    border-radius: 0 !important;
+    transform: none !important;
+  }
+  @page {
+    size: A4 landscape;
+    margin: 0;
   }
 }

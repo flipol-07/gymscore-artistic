@@ -5,9 +5,12 @@ export function Footer() {
         <span style={{ fontWeight: 700, fontSize: 15, color: '#111' }}>
           gym<span style={{ color: '#4C6FD9' }}>score</span>
         </span>
-        <span style={{ fontSize: 13, color: '#999' }}>
-          © {new Date().getFullYear()} · Resultados en directo
-        </span>
+        <div style={{ display: 'flex', gap: 16 }}>
+          <a href="/admin" style={{ fontSize: 13, fontWeight: 700, color: 'var(--gs-muted)', textDecoration: 'none' }}>Mesa de Control</a>
+          <span style={{ fontSize: 13, color: '#999' }}>
+            © {new Date().getFullYear()} · Resultados en directo
+          </span>
+        </div>
       </div>
     </footer>
   )

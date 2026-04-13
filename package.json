@@ -16,6 +16,7 @@
     "ai": "^6.0.139",
     "clsx": "^2.1.1",
     "framer-motion": "^12.38.0",
+    "html-to-image": "^1.11.13",
     "lucide-react": "^1.0.1",
     "next": "^16.0.0",
     "pdf-parse-fork": "^1.2.0",

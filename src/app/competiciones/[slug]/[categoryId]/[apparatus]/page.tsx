@@ -1,12 +1,14 @@
 'use client'
 
 import { useEffect, useState, use } from 'react'
-import Link from 'next/link'
 import { Navbar } from '@/shared/components/navbar'
 import { Footer } from '@/shared/components/footer'
 import * as service from '@/features/competitions/services/competition-service'
 import { APPARATUS_NAMES, APPARATUS_ICONS, type Apparatus } from '@/features/competitions/types'
+import { useFavorites } from '@/shared/hooks/use-favorites'
 import type { RankingEntry, Competition, Promotion } from '@/features/competitions/types'
+import { createClient as createBrowserClient } from '@/lib/supabase/client'
+import { Star } from 'lucide-react'
 
 interface Props {
   params: Promise<{ slug: string; categoryId: string; apparatus: string }>
@@ -25,11 +27,13 @@ export default function AparatoPage({ params: paramsPromise }: Props) {
   
   const [competition, setCompetition] = useState<Competition | null>(null)
   const [promotion, setPromotion] = useState<Promotion | null>(null)
-  const [rankings, setRankings] = useState<RankingEntry[]>([])
+  const [rankings, setRankings] = useState<(RankingEntry & { appScore: number })[]>([])
   const [loading, setLoading] = useState(true)
 
   const apparatusKey = apparatus as Apparatus
   const apparatusName = APPARATUS_NAMES[apparatusKey]
+
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
 
   useEffect(() => {
     async function load() {
@@ -41,7 +45,6 @@ export default function AparatoPage({ params: paramsPromise }: Props) {
         setPromotion(prom)
         const allRanks = await service.getRankings(prom.id)
         
-        // Custom sort for specific apparatus
         const apparatusRanks = allRanks.map(entry => {
           let score = 0
           if (apparatusKey === 'vault') score = entry.vaultScore
@@ -52,14 +55,33 @@ export default function AparatoPage({ params: paramsPromise }: Props) {
           return { ...entry, appScore: score }
         }).sort((a, b) => b.appScore - a.appScore)
         
-        // Re-assign positions based on apparatus score
         const ranked = apparatusRanks.map((e, idx) => ({ ...e, position: idx + 1 }))
         setRankings(ranked)
       }
       setLoading(false)
     }
     load()
-  }, [slug, categoryId, apparatusKey])
+  }, [slug, categoryId, apparatusKey, refreshTrigger])
+
+  const { isFavorite, toggleFavorite } = useFavorites()
+
+  useEffect(() => {
+    const supabase = createBrowserClient()
+    const channel = supabase
+      .channel('realtime_scores_app')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'scores' },
+        () => {
+          setRefreshTrigger(prev => prev + 1)
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [])
 
   if (loading) return <div style={{ padding: 40, textAlign: 'center', fontWeight: 'bold' }}>Cargando resultados de {apparatusName}...</div>
   if (!promotion || !apparatusName) return <div style={{ padding: 40, textAlign: 'center' }}>Error cargando los datos.</div>
@@ -118,32 +140,42 @@ export default function AparatoPage({ params: paramsPromise }: Props) {
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
-                  <tr style={{ borderBottom: '1px solid var(--gs-border)' }}>
-                    <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: 'var(--gs-muted)', textTransform: 'uppercase' }}>#</th>
-                    <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: 'var(--gs-muted)', textTransform: 'uppercase' }}>Gimnasta</th>
-                    <th className="hidden md:table-cell" style={{ padding: '12px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: 'var(--gs-muted)', textTransform: 'uppercase' }}>Club</th>
-                    <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: 11, fontWeight: 700, color: 'var(--gs-muted)', textTransform: 'uppercase' }}>Nota</th>
+                  <tr style={{ borderBottom: '1px solid var(--gs-border)', background: 'var(--gs-bg)' }}>
+                    <th style={{ padding: '16px', textAlign: 'center', width: 40 }}>#</th>
+                    <th style={{ padding: '16px', textAlign: 'left' }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--gs-muted)', textTransform: 'uppercase' }}>Gimnasta / Club</span>
+                    </th>
+                    <th style={{ padding: '16px', textAlign: 'right' }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--gs-muted)', textTransform: 'uppercase' }}>Nota</span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {rankings.map((score) => {
-                    const val = (score as any).appScore
+                  {rankings.map((entry) => {
+                    const isFav = isFavorite(entry.inscriptionId)
                     return (
-                      <tr key={score.inscriptionId} style={{ borderBottom: '1px solid var(--gs-border)' }}>
-                        <td style={{ padding: '14px 16px' }}>
-                          <MedalBadge pos={score.position} />
+                      <tr key={entry.inscriptionId} style={{ borderBottom: '1px solid var(--gs-border)' }}>
+                        <td style={{ padding: '16px', textAlign: 'center' }}>
+                          <MedalBadge pos={entry.position} />
                         </td>
-                        <td style={{ padding: '14px 16px' }}>
-                          <div style={{ fontWeight: 700, color: 'var(--gs-text)', fontSize: 15 }}>{score.gymnastName}</div>
-                          <div className="md:hidden" style={{ fontSize: 12, color: 'var(--gs-muted)', marginTop: 2 }}>{score.clubName}</div>
-                        </td>
-                        <td className="hidden md:table-cell" style={{ padding: '14px 16px', color: 'var(--gs-muted)', fontSize: 14 }}>
-                          {score.clubName}
-                        </td>
-                        <td style={{ padding: '14px 16px', textAlign: 'right' }}>
-                          <div style={{ fontWeight: 800, fontSize: 16, color: 'var(--gs-primary)', fontVariantNumeric: 'tabular-nums' }}>
-                            {val.toFixed(3)}
+                        <td style={{ padding: '16px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <button 
+                              onClick={() => toggleFavorite(entry.inscriptionId)}
+                              style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: isFav ? '#FFD700' : '#E2E8F0' }}
+                            >
+                              <Star size={16} fill={isFav ? 'currentColor' : 'none'} />
+                            </button>
+                            <div>
+                              <div style={{ fontWeight: 800, color: 'var(--gs-text)', fontSize: 15 }}>{entry.gymnastName}</div>
+                              <div style={{ fontSize: 12, color: 'var(--gs-muted)', fontWeight: 500 }}>{entry.clubName}</div>
+                            </div>
                           </div>
+                        </td>
+                        <td style={{ padding: '16px', textAlign: 'right' }}>
+                           <span style={{ fontSize: 18, fontWeight: 900, color: 'var(--gs-text)' }}>
+                            {entry.appScore.toFixed(2)}
+                          </span>
                         </td>
                       </tr>
                     )

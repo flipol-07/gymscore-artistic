@@ -20,12 +20,12 @@ export default function CreateCompetitionPage() {
     async function check() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
-        router.push('/admin')
+        router.push('/superadmin')
         return
       }
       const { data: prof } = await supabase.from('profiles').select('role').eq('id', user.id).single()
       if (prof?.role !== 'superadmin') {
-        router.push('/admin')
+        router.push('/superadmin')
         return
       }
       setIsSuper(true)
@@ -49,7 +49,7 @@ export default function CreateCompetitionPage() {
 
   return (
     <div style={{ minHeight: '100vh', flexDirection: 'column', background: 'var(--gs-bg)', display: 'flex' }}>
-      <Navbar isAdmin onBack={() => router.push('/admin')} />
+      <Navbar isAdmin onBack={() => router.push('/superadmin')} />
       <main style={{ flex: 1, padding: '40px 16px' }}>
         <div className="gs-container" style={{ maxWidth: 500 }}>
           <div className="gs-card" style={{ padding: '32px' }}>

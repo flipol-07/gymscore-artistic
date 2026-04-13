@@ -4,7 +4,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { parseProgramFromBase64 } from '../services/program-parser'
 
-export async function processProgramAction(competitionId: string, base64Pdf: string) {
+export async function processProgramAction(competitionId: string, base64Pdf: string, password?: string) {
   const cookieStore = await cookies()
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -18,9 +18,17 @@ export async function processProgramAction(competitionId: string, base64Pdf: str
     }
   )
 
-  // 1. Check permissions
+  // 1. Check permissions: Supabase superadmin OR valid event password
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthorized')
+  if (!user) {
+    // Try event password validation
+    if (!password) throw new Error('Unauthorized')
+    const { data: match, error: pwErr } = await supabase.rpc('verify_competition_password', {
+      p_competition_id: competitionId,
+      p_password: password
+    })
+    if (pwErr || !match) throw new Error('Unauthorized')
+  }
 
   // 2. Parse with AI
   console.log('[AI] Iniciando análisis del programa...')

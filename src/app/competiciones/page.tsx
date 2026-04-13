@@ -1,31 +1,48 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useState } from 'react'
 import { Search } from 'lucide-react'
 import { Navbar } from '@/shared/components/navbar'
 import { Footer } from '@/shared/components/footer'
-import { getCompetitions } from '@/features/competitions/data/demo-data'
+import * as service from '@/features/competitions/services/competition-service'
 import type { Competition } from '@/features/competitions/types'
 
 function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })
+  if (!dateStr) return ''
+  try {
+    return new Date(dateStr).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })
+  } catch (e) {
+    return dateStr
+  }
 }
 
-function StatusBadge({ status }: { status: Competition['status'] }) {
+function StatusBadge({ status, isPublished }: { status: Competition['status'], isPublished?: boolean }) {
+  if (!isPublished) return <span className="gs-badge gs-badge-finished" style={{ border: '1px dashed #ccc', background: 'transparent' }}>Borrador</span>
   if (status === 'active') return <span className="gs-badge gs-badge-live">● En directo</span>
   if (status === 'finished') return <span className="gs-badge gs-badge-finished">Finalizado</span>
-  return <span className="gs-badge gs-badge-finished">Próximamente</span>
+  return null
 }
 
 export default function CompeticionesPage() {
   const [query, setQuery] = useState('')
   const [tab, setTab] = useState<'all' | 'active' | 'finished'>('all')
+  const [allCompetitions, setAllCompetitions] = useState<Competition[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const all = getCompetitions()
-  const filtered = all.filter((c) => {
-    const matchQ = c.name.toLowerCase().includes(query.toLowerCase()) || c.location.toLowerCase().includes(query.toLowerCase())
-    const matchT = tab === 'all' || c.status === tab || (tab === 'finished' && c.status === 'draft')
+  useEffect(() => {
+    service.getCompetitions(true).then(data => {
+      setAllCompetitions(data || [])
+      setLoading(false)
+    }).catch(err => {
+      console.error(err)
+      setLoading(false)
+    })
+  }, [])
+
+  const filtered = (allCompetitions || []).filter((c) => {
+    const matchQ = c.name.toLowerCase().includes(query.toLowerCase()) || (c.location || '').toLowerCase().includes(query.toLowerCase())
+    const matchT = tab === 'all' || c.status === tab
     return matchQ && matchT
   })
 
@@ -80,7 +97,9 @@ export default function CompeticionesPage() {
 
         {/* List */}
         <div className="gs-container" style={{ padding: '24px 16px' }}>
-          {filtered.length === 0 ? (
+          {loading ? (
+            <p style={{ color: 'var(--gs-muted)', padding: '40px 0', fontSize: 14 }}>Cargando competiciones...</p>
+          ) : filtered.length === 0 ? (
             <p style={{ color: 'var(--gs-muted)', padding: '40px 0', fontSize: 14 }}>Sin resultados.</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -88,36 +107,27 @@ export default function CompeticionesPage() {
                 <Link
                   key={comp.id}
                   href={`/competiciones/${comp.slug}`}
-                  className="gs-card"
+                  className="gs-card hover-bg"
                   style={{ 
-                    display: 'block', 
-                    padding: '16px 20px', 
-                    textDecoration: 'none',
-                    position: 'relative'
+                    padding: 16, 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    textDecoration: 'none'
                   }}
                 >
-                  <div style={{ paddingRight: 80 }}>
-                    <div style={{ fontWeight: 700, fontSize: 16, color: 'var(--gs-text)', marginBottom: 4, lineHeight: 1.3 }}>
-                      {comp.name}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--gs-text)' }}>{comp.name}</span>
+                      <StatusBadge status={comp.status} isPublished={comp.isPublished} />
                     </div>
-                    <div style={{ fontSize: 13, color: 'var(--gs-primary)', fontWeight: 600, marginBottom: 8 }}>
-                      {comp.categoryCount} categorías
-                    </div>
-                    <div style={{ fontSize: 12, color: 'var(--gs-muted)', display: 'flex', flexWrap: 'wrap', gap: '4px 8px' }}>
-                      <span style={{ fontWeight: 500 }}>{formatDate(comp.date)}</span>
-                      {comp.location && (
-                        <>
-                          <span style={{ opacity: 0.5 }}>·</span>
-                          <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {comp.location}
-                          </span>
-                        </>
-                      )}
+                    <div style={{ fontSize: 12, color: 'var(--gs-muted)', fontWeight: 500 }}>
+                      {formatDate(comp.date)} · {comp.location}
                     </div>
                   </div>
-                  
-                  <div style={{ position: 'absolute', top: 16, right: 16 }}>
-                    <StatusBadge status={comp.status} />
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--gs-primary)' }}>Ver detalles →</div>
+                    <div style={{ fontSize: 10, color: '#999', marginTop: 4 }}>{comp.categoryCount} categorías</div>
                   </div>
                 </Link>
               ))}

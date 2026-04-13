@@ -3,6 +3,31 @@ export type CompetitionStatus = 'draft' | 'active' | 'finished'
 export type PromotionStatus = 'pending' | 'active' | 'finished'
 export type Apparatus = 'vault' | 'bars' | 'beam' | 'floor' | 'pommel' | 'rings' | 'p_bars' | 'h_bar'
 
+export const FEMALE_APPARATUS: Apparatus[] = ['vault', 'bars', 'beam', 'floor']
+export const MALE_APPARATUS: Apparatus[] = ['floor', 'pommel', 'rings', 'vault', 'p_bars', 'h_bar']
+
+export const APPARATUS_NAMES: Record<Apparatus, string> = {
+  vault: 'Salto',
+  bars: 'Asimétricas',
+  beam: 'Barra',
+  floor: 'Suelo',
+  pommel: 'Arcos',
+  rings: 'Anillas',
+  p_bars: 'Paralelas',
+  h_bar: 'Barra Fija'
+}
+
+export const APPARATUS_ICONS: Record<Apparatus, string> = {
+  vault: '/images/apparatus/vault.png',
+  bars: '/images/apparatus/bars.png',
+  beam: '/images/apparatus/beam.png',
+  floor: '/images/apparatus/floor.png',
+  pommel: '/images/apparatus/pommel.png',
+  rings: '/images/apparatus/rings.png',
+  p_bars: '/images/apparatus/p_bars.png',
+  h_bar: '/images/apparatus/h_bar.png'
+}
+
 // Jornada: agrupación temporal dentro de un evento
 export interface CompetitionSession {
   id: string
@@ -18,7 +43,7 @@ export interface Promotion {
   id: string
   sessionId: string
   competitionId: string
-  categoryId: string  // links to existing Category
+  categoryId: string
   name: string        // "Promoción 4", "Escolar Cadete", etc.
   gender: Gender
   gymnast_count: number
@@ -40,6 +65,8 @@ export interface Competition {
   status: CompetitionStatus
   programUrl?: string
   categoryCount?: number
+  isPublished?: boolean
+  adminPassword?: string
 }
 
 export interface Category {
@@ -61,7 +88,7 @@ export interface Gymnast {
 export interface Inscription {
   id: string
   gymnastId: string
-  categoryId: string
+  promotionId: string
   clubId?: string
 }
 
@@ -69,10 +96,9 @@ export interface Score {
   id: string
   inscriptionId: string
   apparatus: Apparatus
+  score: number
   dScore: number
   eScore: number
-  penalty: number
-  finalScore: number
 }
 
 export interface RankingEntry {
@@ -85,18 +111,13 @@ export interface RankingEntry {
   barsScore: number
   beamScore: number
   floorScore: number
+  pommelScore: number
+  ringsScore: number
+  p_barsScore: number
+  h_barScore: number
   totalScore: number
-}
-
-export interface ApparatusScore {
-  position: number
-  gymnastName: string
-  clubName: string
-  clubFlag?: string
-  dScore: number
-  eScore: number
-  penalty: number
-  finalScore: number
+  competitionSlug?: string
+  categoryId?: string
 }
 
 export interface GymnastHistory {
@@ -111,29 +132,4 @@ export interface GymnastHistory {
   beamScore: number
   floorScore: number
   totalScore: number
-}
-
-export const FEMALE_APPARATUS: Apparatus[] = ['vault', 'bars', 'beam', 'floor']
-export const MALE_APPARATUS: Apparatus[] = ['floor', 'pommel', 'rings', 'vault', 'p_bars', 'h_bar']
-
-export const APPARATUS_NAMES: Record<Apparatus, string> = {
-  vault: 'Salto',
-  bars: 'Paralelas',
-  beam: 'Barra',
-  floor: 'Suelo',
-  pommel: 'Caballo',
-  rings: 'Anillas',
-  p_bars: 'Paralelas',
-  h_bar: 'Barra fija',
-}
-
-export const APPARATUS_ICONS: Record<Apparatus, string> = {
-  vault: '/icons/apparatus/vault.png',
-  bars: '/icons/apparatus/bars.png',
-  beam: '/icons/apparatus/beam.png',
-  floor: '/icons/apparatus/floor.png',
-  pommel: 'CircleDashed',
-  rings: 'Circle',
-  p_bars: 'Columns',
-  h_bar: 'Maximize2',
 }

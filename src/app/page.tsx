@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Search } from 'lucide-react'
 import { Navbar } from '@/shared/components/navbar'
 import { Footer } from '@/shared/components/footer'
+import { FavoritesGrid } from '@/features/competitions/components/favorites-grid'
 import * as service from '@/features/competitions/services/competition-service'
 import type { Competition } from '@/features/competitions/types'
 
@@ -14,10 +15,11 @@ function formatDate(dateStr: string) {
   return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
-function StatusBadge({ status }: { status: Competition['status'] }) {
+function StatusBadge({ status, isPublished }: { status: Competition['status'], isPublished?: boolean }) {
+  if (!isPublished) return <span className="gs-badge gs-badge-finished" style={{ border: '1px dashed #ccc', background: 'transparent' }}>Borrador</span>
   if (status === 'active') return <span className="gs-badge gs-badge-live">● En directo</span>
   if (status === 'finished') return <span className="gs-badge gs-badge-finished">Finalizado</span>
-  return <span className="gs-badge gs-badge-finished">Próximamente</span>
+  return null
 }
 
 export default function Home() {
@@ -26,7 +28,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    service.getCompetitions().then(data => {
+    service.getCompetitions(true).then(data => {
       setAllCompetitions(data)
       setLoading(false)
     })
@@ -43,7 +45,7 @@ export default function Home() {
 
       <main style={{ flex: 1 }}>
         {/* Hero header */}
-        <div className="gs-hero" style={{ background: '#fff', borderBottom: '1px solid var(--gs-border)', padding: '40px 0 32px' }}>
+        <div className="gs-hero" style={{ background: '#fff', borderBottom: '1px solid var(--gs-border)', padding: '40px 0 32px', textAlign: 'center' }}>
           <div className="gs-container">
             <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--gs-text)', marginBottom: 6 }}>
               Resultados en directo
@@ -53,7 +55,7 @@ export default function Home() {
             </p>
 
             {/* Search */}
-            <div style={{ position: 'relative', maxWidth: 480 }}>
+            <div style={{ position: 'relative', maxWidth: 480, margin: '0 auto' }}>
               <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#999' }} />
               <input
                 className="gs-input"
@@ -65,6 +67,9 @@ export default function Home() {
             </div>
           </div>
         </div>
+
+        {/* Favorites Section */}
+        <FavoritesGrid />
 
         {/* Competition list */}
         <div className="gs-container" style={{ padding: '24px 16px' }}>
@@ -109,7 +114,7 @@ export default function Home() {
                   </div>
                   
                   <div style={{ position: 'absolute', top: 16, right: 16 }}>
-                    <StatusBadge status={comp.status} />
+                    <StatusBadge status={comp.status} isPublished={comp.isPublished} />
                   </div>
                 </Link>
               ))}

@@ -8,6 +8,7 @@ import * as service from '@/features/competitions/services/competition-service'
 import { FEMALE_APPARATUS, MALE_APPARATUS, type Apparatus } from '@/features/competitions/types'
 import { RankingsTable } from '@/features/competitions/components/rankings-table'
 import type { RankingEntry, Competition, Promotion } from '@/features/competitions/types'
+import { createClient as createBrowserClient } from '@/lib/supabase/client'
 
 interface Props {
   params: Promise<{ slug: string; categoryId: string }>
@@ -22,21 +23,46 @@ export default function ResultadosPage({ params: paramsPromise }: Props) {
   const [rankings, setRankings] = useState<RankingEntry[]>([])
   const [loading, setLoading] = useState(true)
 
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
+
   useEffect(() => {
     async function load() {
+      console.log('Loading results for:', slug, categoryId)
       const comp = await service.getCompetitionBySlug(slug)
+      console.log('Competition loaded:', comp?.name)
       if (comp) setCompetition(comp)
       
       const prom = await service.getPromotionById(categoryId)
+      console.log('Promotion loaded:', prom?.name)
       if (prom) {
         setPromotion(prom)
         const ranks = await service.getRankings(prom.id)
+        console.log('Rankings loaded:', ranks.length)
         setRankings(ranks)
       }
       setLoading(false)
+      console.log('Loading finished')
     }
-    load()
-  }, [slug, categoryId])
+    load().catch(err => console.error('Load error:', err))
+  }, [slug, categoryId, refreshTrigger])
+
+  useEffect(() => {
+    const supabase = createBrowserClient()
+    const channel = supabase
+      .channel('realtime_scores_global')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'scores' },
+        () => {
+          setRefreshTrigger(prev => prev + 1)
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [])
 
   if (loading) return <div style={{ padding: 40, textAlign: 'center', fontWeight: 'bold' }}>Cargando resultados...</div>
   if (!promotion) return <div style={{ padding: 40, textAlign: 'center' }}>Categoría no encontrada.</div>
@@ -101,12 +127,7 @@ export default function ResultadosPage({ params: paramsPromise }: Props) {
         {/* Rankings table */}
         <div className="gs-container" style={{ padding: '32px 16px' }}>
           <div className="gs-card" style={{ overflow: 'hidden', padding: 0 }}>
-            <RankingsTable
-              rankings={rankings}
-              apparatus={apparatus}
-              slug={slug}
-              categoryId={categoryId}
-            />
+            <RankingsTable entries={rankings} gender={promotion.gender} />
           </div>
         </div>
       </main>

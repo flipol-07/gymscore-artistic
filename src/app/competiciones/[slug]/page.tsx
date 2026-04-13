@@ -163,19 +163,13 @@ export default function EventoPage({ params: paramsPromise }: { params: Promise<
                   </div>
 
                   <div style={{ marginTop: 'auto', paddingTop: 8 }}>
-                    {prom.status !== 'pending' ? (
-                      <Link
-                        href={`/competiciones/${slug}/${prom.id}`}
-                        className="gs-btn-primary"
-                        style={{ fontSize: 13, width: '100%', justifyContent: 'center' }}
-                      >
-                        {prom.status === 'active' ? 'Ver notas en directo' : 'Ver resultados finales'}
-                      </Link>
-                    ) : (
-                      <span className="gs-btn-secondary" style={{ fontSize: 13, width: '100%', justifyContent: 'center', opacity: 0.6, cursor: 'not-allowed' }}>
-                        Próximamente
-                      </span>
-                    )}
+                    <Link
+                      href={`/competiciones/${slug}/${prom.id}`}
+                      className={prom.status === 'active' ? 'gs-btn-primary' : 'gs-btn-secondary'}
+                      style={{ fontSize: 13, width: '100%', justifyContent: 'center' }}
+                    >
+                      {prom.status === 'active' ? 'Ver notas en directo' : prom.status === 'finished' ? 'Ver resultados finales' : 'Ver clasificación'}
+                    </Link>
                   </div>
                 </div>
               ))}
