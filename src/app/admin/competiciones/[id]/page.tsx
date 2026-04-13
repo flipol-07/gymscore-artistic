@@ -9,6 +9,7 @@ import type { CompetitionStatus } from '@/features/competitions/types'
 import { FEMALE_APPARATUS, MALE_APPARATUS, APPARATUS_NAMES, type Apparatus } from '@/features/competitions/types'
 import type { RankingEntry, Competition, CompetitionSession, Promotion } from '@/features/competitions/types'
 import { processProgramAction } from '@/features/competitions/actions/process-program'
+import { processCsvAction } from '@/features/competitions/actions/process-csv'
 import { createClient as createBrowserClient } from '@/lib/supabase/client'
 
 function getScore(entry: RankingEntry, app: Apparatus): number {
@@ -198,6 +199,24 @@ export default function AdminCompeticionPage() {
     }
   }
 
+  const handleCsvUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !competition) return
+    
+    setProcessing(true)
+    try {
+      const text = await file.text()
+      const pass = isSuper ? competition.adminPassword : enteredPassword
+      await processCsvAction(competition.id, text, pass || undefined)
+      alert('¡CSV procesado con éxito! Se han creado las jornadas, categorías y gimnastas.')
+      window.location.reload()
+    } catch (err: any) {
+      alert('Error procesando CSV: ' + err.message)
+    } finally {
+      setProcessing(false)
+    }
+  }
+
   if (loading) return <div style={{ padding: 40, textAlign: 'center', fontWeight: 'bold' }}>Cargando datos reales...</div>
   if (!competition) return <div style={{ padding: 40, textAlign: 'center' }}>Competición no encontrada.</div>
 
@@ -256,8 +275,13 @@ export default function AdminCompeticionPage() {
             
             <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
                <label className="gs-btn-secondary" style={{ padding: '10px 24px', borderRadius: 12, fontWeight: 700, fontSize: 14, cursor: processing ? 'default' : 'pointer', opacity: processing ? 0.5 : 1 }}>
-                {processing ? 'Procesando...' : 'Subir programa (AI)'}
+                {processing ? 'Procesando...' : 'Subir PDF (AI)'}
                 <input type="file" accept="application/pdf" style={{ display: 'none' }} onChange={handleFileUpload} disabled={processing} />
+              </label>
+
+              <label className="gs-btn-secondary" style={{ padding: '10px 24px', borderRadius: 12, fontWeight: 700, fontSize: 14, cursor: processing ? 'default' : 'pointer', opacity: processing ? 0.5 : 1 }}>
+                {processing ? 'Procesando...' : 'Subir CSV'}
+                <input type="file" accept=".csv" style={{ display: 'none' }} onChange={handleCsvUpload} disabled={processing} />
               </label>
               
               {isSuper && (
