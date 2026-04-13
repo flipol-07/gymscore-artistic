@@ -132,15 +132,23 @@ export default function AdminCompeticionPage() {
     setProcessing(false)
   }
 
-  const handleUpdateProgramUrl = async (url: string) => {
-    if (!competition) return
+  const handleUpdateProgramFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!competition || !file) return
+    
     setProcessing(true)
-    const { success } = await service.updateCompetitionProgramUrl(competition.id, url)
-    if (success) {
-      alert('Programa actualizado.')
-      setCompetition(prev => prev ? { ...prev, programUrl: url } : null)
+    const { url, error } = await service.uploadProgram(competition.id, file)
+    if (url) {
+      const { success } = await service.updateCompetitionProgramUrl(competition.id, url)
+      if (success) {
+        alert('Programa subido y actualizado correctamente.')
+        setCompetition(prev => prev ? { ...prev, programUrl: url } : null)
+      } else {
+        alert('Error vinculando el programa a la competición.')
+      }
     } else {
-      alert('Error actualizando programa.')
+      console.error('Upload error:', error)
+      alert('Error subiendo el archivo a Supabase Storage.')
     }
     setProcessing(false)
   }
@@ -370,29 +378,31 @@ export default function AdminCompeticionPage() {
                   <h4 style={{ fontSize: 13, fontWeight: 700, color: 'var(--gs-text)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'left' }}>
                     Programa del Evento (PDF)
                   </h4>
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <input 
-                      type="text" 
-                      placeholder="URL del PDF (ej: /docs/programa.pdf)"
-                      defaultValue={competition.programUrl || ''}
-                      id="programUrlInput"
-                      className="gs-input"
-                      style={{ flex: 1, height: 44, fontSize: 13 }}
-                    />
-                    <button 
-                      onClick={() => {
-                        const input = document.getElementById('programUrlInput') as HTMLInputElement
-                        handleUpdateProgramUrl(input.value)
-                      }}
-                      className="gs-btn-primary"
-                      style={{ padding: '0 16px', height: 44, fontSize: 12, borderRadius: 12 }}
-                      disabled={processing}
-                    >
-                      {processing ? '...' : 'Actualizar'}
-                    </button>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <label className="gs-btn-primary" style={{ flex: 1, padding: '12px', textAlign: 'center', cursor: processing ? 'default' : 'pointer', opacity: processing ? 0.6 : 1 }}>
+                      {processing ? 'Subiendo...' : (competition.programUrl ? 'Cambiar Programa (PDF)' : 'Subir Programa (PDF)')}
+                      <input 
+                        type="file" 
+                        accept="application/pdf"
+                        style={{ display: 'none' }}
+                        onChange={handleUpdateProgramFile}
+                        disabled={processing}
+                      />
+                    </label>
+                    {competition.programUrl && (
+                      <a 
+                        href={competition.programUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="gs-btn-secondary"
+                        style={{ padding: '12px', fontSize: 13, textDecoration: 'none' }}
+                      >
+                        Ver actual
+                      </a>
+                    )}
                   </div>
                   <p style={{ fontSize: 11, color: 'var(--gs-muted)', marginTop: 8, textAlign: 'left' }}>
-                    Sube el archivo a la carpeta public/docs/ y pon aquí la ruta.
+                    El archivo se guardará de forma permanente en Supabase Storage y será accesible para todos los usuarios.
                   </p>
                 </div>
             )}

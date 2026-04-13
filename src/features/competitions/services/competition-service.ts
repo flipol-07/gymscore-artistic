@@ -305,6 +305,25 @@ export async function updateCompetitionProgramUrl(competitionId: string, url: st
   return { success: !error, error }
 }
 
+export async function uploadProgram(competitionId: string, file: File): Promise<{ url: string | null, error: any }> {
+  const supabase = createClient()
+  const fileExt = file.name.split('.').pop()
+  const fileName = `${competitionId}-${Date.now()}.${fileExt}`
+  const filePath = `${fileName}`
+
+  const { error: uploadError } = await supabase.storage
+    .from('programs')
+    .upload(filePath, file)
+
+  if (uploadError) return { url: null, error: uploadError }
+
+  const { data: { publicUrl } } = supabase.storage
+    .from('programs')
+    .getPublicUrl(filePath)
+
+  return { url: publicUrl, error: null }
+}
+
 export async function updateCompetitionVisibility(competitionId: string, isPublished: boolean) {
   const supabase = createClient()
   const { error } = await supabase
