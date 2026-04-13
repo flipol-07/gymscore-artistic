@@ -295,6 +295,16 @@ export async function getGymnastRealHistory(gymnastName: string): Promise<Gymnas
   }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 }
 
+export async function updateCompetitionProgramUrl(competitionId: string, url: string) {
+  const supabase = createClient()
+  const { error } = await supabase
+    .from('competitions')
+    .update({ program_url: url })
+    .eq('id', competitionId)
+
+  return { success: !error, error }
+}
+
 export async function updateCompetitionVisibility(competitionId: string, isPublished: boolean) {
   const supabase = createClient()
   const { error } = await supabase

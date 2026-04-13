@@ -132,6 +132,19 @@ export default function AdminCompeticionPage() {
     setProcessing(false)
   }
 
+  const handleUpdateProgramUrl = async (url: string) => {
+    if (!competition) return
+    setProcessing(true)
+    const { success } = await service.updateCompetitionProgramUrl(competition.id, url)
+    if (success) {
+      alert('Programa actualizado.')
+      setCompetition(prev => prev ? { ...prev, programUrl: url } : null)
+    } else {
+      alert('Error actualizando programa.')
+    }
+    setProcessing(false)
+  }
+
   const handleUpdateScore = async (inscriptionId: string, app: Apparatus, val: number) => {
     const pass = isSuper ? competition?.adminPassword : enteredPassword
     const { success } = await service.updateScore(inscriptionId, app, val, 0, pass || undefined)
@@ -350,6 +363,39 @@ export default function AdminCompeticionPage() {
                 </div>
               )}
             </div>
+
+            {/* Gestion de Programa */}
+            {isSuper && (
+                <div style={{ marginTop: 24, marginInline: 'auto', maxWidth: 460, padding: 16, background: '#f8fafc', borderRadius: 16, border: '1px solid #e2e8f0' }}>
+                  <h4 style={{ fontSize: 13, fontWeight: 700, color: 'var(--gs-text)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'left' }}>
+                    Programa del Evento (PDF)
+                  </h4>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <input 
+                      type="text" 
+                      placeholder="URL del PDF (ej: /docs/programa.pdf)"
+                      defaultValue={competition.programUrl || ''}
+                      id="programUrlInput"
+                      className="gs-input"
+                      style={{ flex: 1, height: 44, fontSize: 13 }}
+                    />
+                    <button 
+                      onClick={() => {
+                        const input = document.getElementById('programUrlInput') as HTMLInputElement
+                        handleUpdateProgramUrl(input.value)
+                      }}
+                      className="gs-btn-primary"
+                      style={{ padding: '0 16px', height: 44, fontSize: 12, borderRadius: 12 }}
+                      disabled={processing}
+                    >
+                      {processing ? '...' : 'Actualizar'}
+                    </button>
+                  </div>
+                  <p style={{ fontSize: 11, color: 'var(--gs-muted)', marginTop: 8, textAlign: 'left' }}>
+                    Sube el archivo a la carpeta public/docs/ y pon aquí la ruta.
+                  </p>
+                </div>
+            )}
           </div>
         </div>
 

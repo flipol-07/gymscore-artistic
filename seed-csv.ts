@@ -37,7 +37,9 @@ async function run() {
     location: 'Pabellón Olímpico Municipal',
     date: new Date().toISOString().split('T')[0],
     status: 'draft',
-    admin_password: '123'
+    admin_password: '123',
+    program_url: '/docs/programa-demo.pdf',
+    is_published: true
   }).select().single()
 
   if (compErr) throw new Error(compErr.message)
