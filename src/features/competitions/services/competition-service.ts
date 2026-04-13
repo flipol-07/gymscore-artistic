@@ -263,10 +263,16 @@ export async function getGymnastRealHistory(gymnastName: string): Promise<Gymnas
 
   return data.map((ins: any) => {
     const scores = ins.scores || []
-    const vault = scores.find((s: any) => s.apparatus === 'vault')?.score || 0
-    const bars = scores.find((s: any) => s.apparatus === 'bars')?.score || 0
-    const beam = scores.find((s: any) => s.apparatus === 'beam')?.score || 0
-    const floor = scores.find((s: any) => s.apparatus === 'floor')?.score || 0
+    const getS = (app: string) => parseFloat(scores.find((s: any) => s.apparatus === app)?.score || 0)
+    
+    const vault = getS('vault')
+    const bars = getS('bars')
+    const beam = getS('beam')
+    const floor = getS('floor')
+    const pommel = getS('pommel')
+    const rings = getS('rings')
+    const p_bars = getS('p_bars')
+    const h_bar = getS('h_bar')
     
     return {
       competitionName: ins.promotions?.competitions?.name || 'Desconocida',
@@ -275,11 +281,16 @@ export async function getGymnastRealHistory(gymnastName: string): Promise<Gymnas
       categoryId: ins.promotions?.id || '',
       date: ins.promotions?.competitions?.date || '',
       clubName: ins.clubs?.name || '',
-      vaultScore: parseFloat(vault),
-      barsScore: parseFloat(bars),
-      beamScore: parseFloat(beam),
-      floorScore: parseFloat(floor),
-      totalScore: parseFloat(vault) + parseFloat(bars) + parseFloat(beam) + parseFloat(floor)
+      gender: ins.promotions?.gender || 'female',
+      vaultScore: vault,
+      barsScore: bars,
+      beamScore: beam,
+      floorScore: floor,
+      pommelScore: pommel,
+      ringsScore: rings,
+      p_barsScore: p_bars,
+      h_barScore: h_bar,
+      totalScore: vault + bars + beam + floor + pommel + rings + p_bars + h_bar
     }
   }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 }

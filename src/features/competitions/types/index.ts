@@ -18,14 +18,14 @@ export const APPARATUS_NAMES: Record<Apparatus, string> = {
 }
 
 export const APPARATUS_ICONS: Record<Apparatus, string> = {
-  vault: '/images/apparatus/vault.png',
-  bars: '/images/apparatus/bars.png',
-  beam: '/images/apparatus/beam.png',
-  floor: '/images/apparatus/floor.png',
-  pommel: '/images/apparatus/pommel.png',
-  rings: '/images/apparatus/rings.png',
-  p_bars: '/images/apparatus/p_bars.png',
-  h_bar: '/images/apparatus/h_bar.png'
+  vault: '/icons/apparatus/vault.png',
+  bars: '/icons/apparatus/bars.png',
+  beam: '/icons/apparatus/beam.png',
+  floor: '/icons/apparatus/floor.png',
+  pommel: '/icons/apparatus/pommel.png',
+  rings: '/icons/apparatus/rings.png',
+  p_bars: '/icons/apparatus/p_bars.png',
+  h_bar: '/icons/apparatus/h_bar.png'
 }
 
 // Jornada: agrupación temporal dentro de un evento
@@ -127,9 +127,14 @@ export interface GymnastHistory {
   categoryId: string
   date: string
   clubName: string
+  gender: Gender
   vaultScore: number
   barsScore: number
   beamScore: number
   floorScore: number
+  pommelScore: number
+  ringsScore: number
+  p_barsScore: number
+  h_barScore: number
   totalScore: number
 }

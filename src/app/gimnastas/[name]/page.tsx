@@ -3,7 +3,8 @@
 import { useParams, useRouter } from 'next/navigation'
 import { Navbar } from '@/shared/components/navbar'
 import { Footer } from '@/shared/components/footer'
-import { FEMALE_APPARATUS, APPARATUS_NAMES, APPARATUS_ICONS, type GymnastHistory } from '@/features/competitions/types'
+import { FEMALE_APPARATUS, MALE_APPARATUS, APPARATUS_NAMES, APPARATUS_ICONS, type GymnastHistory, type Apparatus } from '@/features/competitions/types'
+import { ApparatusIcon } from '@/features/competitions/components/apparatus-icon'
 import * as service from '@/features/competitions/services/competition-service'
 import { useState, useEffect } from 'react'
 
@@ -66,48 +67,72 @@ export default function GymnastProfilePage() {
                     <tr style={{ borderBottom: '1px solid var(--gs-border)', background: 'var(--gs-bg)' }}>
                       <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: 'var(--gs-muted)', textTransform: 'uppercase' }}>Competición</th>
                       <th className="hidden md:table-cell" style={{ padding: '12px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: 'var(--gs-muted)', textTransform: 'uppercase' }}>Club</th>
-                      {FEMALE_APPARATUS.map(app => (
-                        <th key={app} style={{ padding: '12px', textAlign: 'center' }}>
-                          <div style={{ display: 'flex', justifyContent: 'center' }} title={APPARATUS_NAMES[app]}>
-                            <img
-                              src={APPARATUS_ICONS[app]}
-                              alt={APPARATUS_NAMES[app]}
-                              style={{ height: 18, width: 'auto', opacity: 0.8 }}
-                            />
-                          </div>
-                        </th>
-                      ))}
+                      <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: 'var(--gs-muted)', textTransform: 'uppercase' }}>Resultados por Aparato</th>
                       <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: 11, fontWeight: 700, color: 'var(--gs-muted)', textTransform: 'uppercase' }}>Total</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {history.map((item, idx) => (
-                      <tr 
-                        key={`${item.categoryId}-${idx}`}
-                        onClick={() => router.push(`/competiciones/${item.competitionSlug}/${item.categoryId}`)}
-                        style={{ borderBottom: '1px solid var(--gs-border)', cursor: 'pointer', transition: 'background 0.2s' }}
-                        className="hover-bg"
-                      >
-                        <td style={{ padding: '16px' }}>
-                          <div style={{ fontWeight: 700, color: 'var(--gs-text)', fontSize: 15, marginBottom: 4 }}>{item.competitionName}</div>
-                          <div style={{ fontSize: 12, color: 'var(--gs-muted)', fontWeight: 500 }}>
-                            {item.categoryName} <span style={{ margin: '0 4px', opacity: 0.5 }}>·</span> {new Date(item.date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-                          </div>
-                        </td>
-                        <td className="hidden md:table-cell" style={{ padding: '16px', color: 'var(--gs-muted)', fontSize: 14 }}>
-                          {item.clubName}
-                        </td>
-                        <td style={{ padding: '16px', textAlign: 'center', fontWeight: 600 }}>{item.vaultScore > 0 ? item.vaultScore.toFixed(2) : '-'}</td>
-                        <td style={{ padding: '16px', textAlign: 'center', fontWeight: 600 }}>{item.barsScore > 0 ? item.barsScore.toFixed(2) : '-'}</td>
-                        <td style={{ padding: '16px', textAlign: 'center', fontWeight: 600 }}>{item.beamScore > 0 ? item.beamScore.toFixed(2) : '-'}</td>
-                        <td style={{ padding: '16px', textAlign: 'center', fontWeight: 600 }}>{item.floorScore > 0 ? item.floorScore.toFixed(2) : '-'}</td>
-                        <td style={{ padding: '16px', textAlign: 'right' }}>
-                          <div style={{ fontWeight: 900, fontSize: 16, color: 'var(--gs-text)' }}>
-                            {item.totalScore.toFixed(2)}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                    {history.map((item, idx) => {
+                      const apparatusList = item.gender === 'female' ? FEMALE_APPARATUS : MALE_APPARATUS
+                      
+                      const getScoreByApp = (app: Apparatus) => {
+                        switch(app) {
+                          case 'vault': return item.vaultScore
+                          case 'bars': return item.barsScore
+                          case 'beam': return item.beamScore
+                          case 'floor': return item.floorScore
+                          case 'pommel': return item.pommelScore
+                          case 'rings': return item.ringsScore
+                          case 'p_bars': return item.p_barsScore
+                          case 'h_bar': return item.h_barScore
+                          default: return 0
+                        }
+                      }
+
+                      return (
+                        <tr 
+                          key={`${item.categoryId}-${idx}`}
+                          onClick={() => router.push(`/competiciones/${item.competitionSlug}/${item.categoryId}`)}
+                          style={{ borderBottom: '1px solid var(--gs-border)', cursor: 'pointer', transition: 'background 0.2s' }}
+                          className="hover-bg"
+                        >
+                          <td style={{ padding: '16px' }}>
+                            <div style={{ fontWeight: 700, color: 'var(--gs-text)', fontSize: 13, marginBottom: 4 }}>{item.competitionName}</div>
+                            <div style={{ fontSize: 11, color: 'var(--gs-muted)', fontWeight: 500 }}>
+                              {item.categoryName} <span style={{ margin: '0 4px', opacity: 0.5 }}>·</span> {new Date(item.date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                            </div>
+                          </td>
+                          <td className="hidden md:table-cell" style={{ padding: '16px', color: 'var(--gs-muted)', fontSize: 13, fontWeight: 500 }}>
+                            {item.clubName}
+                          </td>
+                          
+                          {/* Aparatos dinámicos con Logos */}
+                          <td colSpan={1} style={{ padding: 0 }}>
+                            <div style={{ display: 'flex', gap: 4, padding: '12px' }}>
+                              {apparatusList.map(app => {
+                                const score = getScoreByApp(app)
+                                return (
+                                  <div key={app} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 45 }}>
+                                    <div style={{ background: 'var(--gs-bg)', padding: 4, borderRadius: 6, marginBottom: 4, color: 'var(--gs-primary)' }} title={APPARATUS_NAMES[app]}>
+                                      <ApparatusIcon apparatus={app} size={16} />
+                                    </div>
+                                    <span style={{ fontSize: 12, fontWeight: 800, color: score > 0 ? 'var(--gs-text)' : 'var(--gs-muted)' }}>
+                                      {score > 0 ? score.toFixed(2) : '-'}
+                                    </span>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          </td>
+
+                          <td style={{ padding: '16px', textAlign: 'right' }}>
+                            <div style={{ fontWeight: 900, fontSize: 16, color: 'var(--gs-text)' }}>
+                              {item.totalScore.toFixed(2)}
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
               </div>
