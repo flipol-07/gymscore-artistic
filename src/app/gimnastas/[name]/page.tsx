@@ -61,81 +61,82 @@ export default function GymnastProfilePage() {
             </div>
           ) : (
             <div className="gs-card" style={{ overflow: 'hidden', padding: 0 }}>
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr style={{ borderBottom: '1px solid var(--gs-border)', background: 'var(--gs-bg)' }}>
-                      <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: 'var(--gs-muted)', textTransform: 'uppercase' }}>Competición</th>
-                      <th className="hidden md:table-cell" style={{ padding: '12px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: 'var(--gs-muted)', textTransform: 'uppercase' }}>Club</th>
-                      <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: 'var(--gs-muted)', textTransform: 'uppercase' }}>Resultados por Aparato</th>
-                      <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: 11, fontWeight: 700, color: 'var(--gs-muted)', textTransform: 'uppercase' }}>Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {history.map((item, idx) => {
-                      const apparatusList = item.gender === 'female' ? FEMALE_APPARATUS : MALE_APPARATUS
-                      
-                      const getScoreByApp = (app: Apparatus) => {
-                        switch(app) {
-                          case 'vault': return item.vaultScore
-                          case 'bars': return item.barsScore
-                          case 'beam': return item.beamScore
-                          case 'floor': return item.floorScore
-                          case 'pommel': return item.pommelScore
-                          case 'rings': return item.ringsScore
-                          case 'p_bars': return item.p_barsScore
-                          case 'h_bar': return item.h_barScore
-                          default: return 0
-                        }
+            <div className="ranking-table-container">
+              <table className="ranking-table">
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--gs-border)', background: 'var(--gs-bg)' }}>
+                    <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: 'var(--gs-muted)', textTransform: 'uppercase' }}>Evento</th>
+                    <th className="hidden md:table-cell" style={{ padding: '12px 16px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: 'var(--gs-muted)', textTransform: 'uppercase' }}>Club</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: 10, fontWeight: 700, color: 'var(--gs-muted)', textTransform: 'uppercase' }}>Notas</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: 10, fontWeight: 700, color: 'var(--gs-muted)', textTransform: 'uppercase' }}>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {history.map((item, idx) => {
+                    const apparatusList = item.gender === 'female' ? FEMALE_APPARATUS : MALE_APPARATUS
+                    
+                    const getScoreByApp = (app: Apparatus) => {
+                      switch(app) {
+                        case 'vault': return item.vaultScore
+                        case 'bars': return item.barsScore
+                        case 'beam': return item.beamScore
+                        case 'floor': return item.floorScore
+                        case 'pommel': return item.pommelScore
+                        case 'rings': return item.ringsScore
+                        case 'p_bars': return item.p_barsScore
+                        case 'h_bar': return item.h_barScore
+                        default: return 0
                       }
+                    }
 
-                      return (
-                        <tr 
-                          key={`${item.categoryId}-${idx}`}
-                          onClick={() => router.push(`/competiciones/${item.competitionSlug}/${item.categoryId}`)}
-                          style={{ borderBottom: '1px solid var(--gs-border)', cursor: 'pointer', transition: 'background 0.2s' }}
-                          className="hover-bg"
-                        >
-                          <td style={{ padding: '16px' }}>
-                            <div style={{ fontWeight: 700, color: 'var(--gs-text)', fontSize: 13, marginBottom: 4 }}>{item.competitionName}</div>
-                            <div style={{ fontSize: 11, color: 'var(--gs-muted)', fontWeight: 500 }}>
-                              {item.categoryName} <span style={{ margin: '0 4px', opacity: 0.5 }}>·</span> {new Date(item.date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-                            </div>
-                          </td>
-                          <td className="hidden md:table-cell" style={{ padding: '16px', color: 'var(--gs-muted)', fontSize: 13, fontWeight: 500 }}>
-                            {item.clubName}
-                          </td>
-                          
-                          {/* Aparatos dinámicos con Logos */}
-                          <td colSpan={1} style={{ padding: 0 }}>
-                            <div style={{ display: 'flex', gap: 4, padding: '12px' }}>
-                              {apparatusList.map(app => {
-                                const score = getScoreByApp(app)
-                                return (
-                                  <div key={app} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 45 }}>
-                                    <div style={{ background: 'var(--gs-bg)', padding: 4, borderRadius: 6, marginBottom: 4, color: 'var(--gs-primary)' }} title={APPARATUS_NAMES[app]}>
-                                      <ApparatusIcon apparatus={app} size={16} />
-                                    </div>
-                                    <span style={{ fontSize: 12, fontWeight: 800, color: score > 0 ? 'var(--gs-text)' : 'var(--gs-muted)' }}>
-                                      {score > 0 ? score.toFixed(2) : '-'}
-                                    </span>
+                    return (
+                      <tr 
+                        key={`${item.categoryId}-${idx}`}
+                        onClick={() => router.push(`/competiciones/${item.competitionSlug}/${item.categoryId}`)}
+                        style={{ borderBottom: '1px solid var(--gs-border)', cursor: 'pointer', transition: 'background 0.2s' }}
+                        className="ranking-row"
+                      >
+                        <td style={{ padding: '16px' }}>
+                          <div style={{ fontWeight: 800, color: 'var(--gs-text)', fontSize: 14, marginBottom: 2, lineHeight: 1.2 }}>{item.competitionName}</div>
+                          <div style={{ fontSize: 11, color: 'var(--gs-muted)', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 4 }}>
+                            {item.categoryName} <span style={{ opacity: 0.5 }}>·</span> {new Date(item.date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })}
+                          </div>
+                        </td>
+                        <td className="hidden md:table-cell" style={{ padding: '16px', color: 'var(--gs-muted)', fontSize: 13, fontWeight: 500 }}>
+                          {item.clubName}
+                        </td>
+                        
+                        {/* Aparatos dinámicos con Logos */}
+                        <td style={{ padding: '8px' }}>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '4px 8px', maxWidth: 280, margin: '0 auto' }}>
+                            {apparatusList.map(app => {
+                              const score = getScoreByApp(app)
+                              if (score <= 0) return null; // Only show scored apparatuses in profile to save space and focus
+                              return (
+                                <div key={app} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'var(--gs-bg)', padding: '4px 8px', borderRadius: 8 }}>
+                                  <div style={{ color: 'var(--gs-primary)' }}>
+                                    <ApparatusIcon apparatus={app} size={14} />
                                   </div>
-                                )
-                              })}
-                            </div>
-                          </td>
+                                  <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--gs-text)', fontVariantNumeric: 'tabular-nums' }}>
+                                    {score.toFixed(2)}
+                                  </span>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </td>
 
-                          <td style={{ padding: '16px', textAlign: 'right' }}>
-                            <div style={{ fontWeight: 900, fontSize: 16, color: 'var(--gs-text)' }}>
-                              {item.totalScore.toFixed(2)}
-                            </div>
-                          </td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                        <td style={{ padding: '16px', textAlign: 'right' }}>
+                          <div style={{ fontWeight: 900, fontSize: 16, color: 'var(--gs-text)', fontVariantNumeric: 'tabular-nums' }}>
+                            {item.totalScore.toFixed(2)}
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
             </div>
           )}
         </div>

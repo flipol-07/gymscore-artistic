@@ -247,6 +247,7 @@ export async function getGymnastRealHistory(gymnastName: string): Promise<Gymnas
       promotions!inner(
         id,
         name,
+        gender,
         competitions!inner(
           name,
           slug,

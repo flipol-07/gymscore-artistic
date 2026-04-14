@@ -279,6 +279,41 @@
   .ranking-row:hover td {
     background: #F8FAFC;
   }
+
+  /* New Responsive Ranking Table Classes */
+  .ranking-table-container {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .ranking-table-container::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ranking-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed; /* Important for fitting multiple columns */
+  }
+
+  .ranking-col-pos { width: 44px; }
+  .ranking-col-gymnast { width: auto; min-width: 120px; }
+  .ranking-col-apparatus { width: 54px; }
+  .ranking-col-total { width: 68px; }
+  .ranking-col-share { width: 44px; }
+
+  @media (max-width: 640px) {
+    .ranking-col-pos { width: 28px; }
+    .ranking-col-gymnast { min-width: 80px; }
+    .ranking-col-apparatus { width: 42px; }
+    .ranking-col-total { width: 50px; }
+    .ranking-col-share { width: 34px; }
+    
+    .gs-container {
+      padding: 0 8px; /* Less horizontal padding on mobile */
+    }
+  }
 }
 
 /* ═══════════════════════════════════════════════ */

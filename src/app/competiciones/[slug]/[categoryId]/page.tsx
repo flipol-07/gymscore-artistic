@@ -103,15 +103,15 @@ export default function ResultadosPage({ params: paramsPromise }: Props) {
         {/* Category Details */}
         <div style={{ background: '#fff', borderBottom: '1px solid var(--gs-border)', padding: '20px 0' }}>
           <div className="gs-container">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div>
-                <h3 style={{ fontSize: 22, fontWeight: 800, color: 'var(--gs-text)', marginBottom: 2 }}>
-                  {promotion.name}
-                </h3>
-                <div style={{ fontSize: 14, color: 'var(--gs-muted)', fontWeight: 500 }}>
-                  {promotion.gender === 'female' ? 'Femenino' : 'Masculino'}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
+                <div>
+                  <h3 style={{ fontSize: 22, fontWeight: 800, color: 'var(--gs-text)', marginBottom: 2 }}>
+                    {promotion.name}
+                  </h3>
+                  <div style={{ fontSize: 14, color: 'var(--gs-muted)', fontWeight: 500 }}>
+                    {promotion.gender === 'female' ? 'Femenino' : 'Masculino'}
+                  </div>
                 </div>
-              </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--gs-muted)', textTransform: 'uppercase' }}>
                   FECHA
@@ -125,8 +125,8 @@ export default function ResultadosPage({ params: paramsPromise }: Props) {
         </div>
 
         {/* Rankings table */}
-        <div className="gs-container" style={{ padding: '32px 16px' }}>
-          <div className="gs-card" style={{ overflow: 'hidden', padding: 0 }}>
+        <div className="gs-container" style={{ padding: '24px 8px' }}>
+          <div className="gs-card" style={{ overflow: 'hidden', padding: 0, borderRadius: 12 }}>
             <RankingsTable entries={rankings} gender={promotion.gender} />
           </div>
         </div>

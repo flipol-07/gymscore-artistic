@@ -96,21 +96,21 @@ export function Navbar({
                 <Link 
                   href="/" 
                   className="gs-btn-secondary" 
-                  style={{ height: 32, display: 'flex', alignItems: 'center', padding: '0 12px', fontSize: 13, fontWeight: 600 }}
+                  style={{ height: 28, display: 'flex', alignItems: 'center', padding: '0 8px', fontSize: 11, fontWeight: 600 }}
                 >
                   Inicio
                 </Link>
                 <Link 
                   href="/gimnastas" 
                   className="gs-btn-secondary" 
-                  style={{ height: 32, display: 'flex', alignItems: 'center', padding: '0 12px', fontSize: 13, fontWeight: 600 }}
+                  style={{ height: 28, display: 'flex', alignItems: 'center', padding: '0 8px', fontSize: 11, fontWeight: 600 }}
                 >
                   Gimnastas
                 </Link>
                 <Link 
                   href="/admin" 
                   className="gs-btn-control"
-                  style={{ height: 32, display: 'flex', alignItems: 'center', padding: '0 12px', fontSize: 13, fontWeight: 600 }}
+                  style={{ height: 28, display: 'flex', alignItems: 'center', padding: '0 8px', fontSize: 11, fontWeight: 600 }}
                 >
                   Control
                 </Link>
@@ -119,7 +119,7 @@ export function Navbar({
               <button
                 onClick={() => router.push('/')}
                 className="gs-btn-secondary"
-                style={{ height: 32, display: 'flex', alignItems: 'center', padding: '0 12px', fontSize: 13, fontWeight: 600 }}
+                style={{ height: 28, display: 'flex', alignItems: 'center', padding: '0 8px', fontSize: 11, fontWeight: 600 }}
               >
                 Inicio
               </button>

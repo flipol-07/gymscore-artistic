@@ -117,39 +117,48 @@ export function RankingsTable({ entries, gender }: RankingsTableProps) {
         )})}
       </div>
 
-      <div style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 500 }}>
+      <div className="ranking-table-container">
+        <table className="ranking-table">
+          <colgroup>
+            <col className="ranking-col-pos" />
+            <col className="ranking-col-gymnast" />
+            {visibleApparatus.map(app => (
+              <col key={`col-${app}`} className="ranking-col-apparatus" />
+            ))}
+            {!focusApparatus && <col className="ranking-col-total" />}
+            <col className="ranking-col-share" />
+          </colgroup>
           <thead>
             <tr style={{ background: 'var(--gs-bg)', borderBottom: '2px solid var(--gs-border)' }}>
-              <th style={{ padding: '12px 16px', textAlign: 'center', width: 44 }}></th>
-              <th style={{ padding: '12px 16px', textAlign: 'left', minWidth: 160 }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--gs-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                  Gimnasta
+              <th style={{ padding: '8px 0', textAlign: 'center' }}></th>
+              <th style={{ padding: '8px 4px', textAlign: 'left' }}>
+                <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--gs-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  Gim.
                 </span>
               </th>
               {visibleApparatus.map(app => (
                 <th
                   key={app}
                   onClick={() => setFocusApparatus(focusApparatus === app ? null : app)}
-                  style={{ padding: '10px 12px', textAlign: 'center', cursor: 'pointer', userSelect: 'none' }}
+                  style={{ padding: '6px 2px', textAlign: 'center', cursor: 'pointer', userSelect: 'none' }}
                   title={`Ver ranking de ${APPARATUS_NAMES[app]}`}
                 >
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
                     <div style={{ color: APPARATUS_COLORS[app] }}>
-                      <ApparatusIcon apparatus={app} size={20} />
+                      <ApparatusIcon apparatus={app} size={16} />
                     </div>
-                    <span style={{ fontSize: 9, fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    <span style={{ fontSize: 7, fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.01em' }}>
                       {APPARATUS_NAMES[app].slice(0, 3)}
                     </span>
                   </div>
                 </th>
               ))}
               {!focusApparatus && (
-                <th style={{ padding: '12px 16px', textAlign: 'right', paddingRight: 20 }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--gs-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Total</span>
+                <th style={{ padding: '8px 4px', textAlign: 'right' }}>
+                  <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--gs-muted)', textTransform: 'uppercase' }}>Tot.</span>
                 </th>
               )}
-              <th style={{ padding: '12px 16px', width: 46 }}></th>
+              <th style={{ padding: '8px 0' }}></th>
             </tr>
           </thead>
           <tbody>
@@ -162,40 +171,61 @@ export function RankingsTable({ entries, gender }: RankingsTableProps) {
                   className="ranking-row"
                 >
                   {/* Position */}
-                  <td style={{ padding: '14px 16px', textAlign: 'center' }}>
+                  <td style={{ padding: '10px 0', textAlign: 'center' }}>
                     {entry.position <= 3 ? (
                       <div style={{
-                        width: 28, height: 28, borderRadius: '50%',
+                        width: 20, height: 20, borderRadius: '50%',
                         background: entry.position === 1 ? '#FFD700' : entry.position === 2 ? '#C0C0C0' : '#CD7F32',
                         display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                       }}>
-                        <Trophy size={13} color="#fff" />
+                        <Trophy size={10} color="#fff" />
                       </div>
                     ) : (
-                      <span style={{ fontSize: 13, fontWeight: 700, color: '#94A3B8' }}>{entry.position}</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: '#94A3B8' }}>{entry.position}</span>
                     )}
                   </td>
 
                   {/* Gymnast + club */}
-                  <td style={{ padding: '14px 16px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                  <td style={{ padding: '10px 4px', overflow: 'hidden' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                       <button
                         onClick={() => toggleFavorite(entry.inscriptionId)}
                         style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: isFav ? '#FFD700' : '#E2E8F0', flexShrink: 0 }}
                       >
-                        <Star size={15} fill={isFav ? 'currentColor' : 'none'} />
+                        <Star size={12} fill={isFav ? 'currentColor' : 'none'} />
                       </button>
-                      <div>
+                      <div style={{ minWidth: 0 }}>
                         <Link
                           href={`/gimnastas/${encodeURIComponent(entry.gymnastName)}`}
-                          style={{ fontWeight: 800, color: 'var(--gs-text)', fontSize: 14, letterSpacing: '-0.01em', lineHeight: 1.2 }}
+                          style={{ 
+                            fontWeight: 800, 
+                            color: 'var(--gs-text)', 
+                            fontSize: 12, 
+                            letterSpacing: '-0.02em', 
+                            lineHeight: 1,
+                            display: 'block',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
+                          }}
                           className="gymnast-link"
                         >
                           {entry.gymnastName}
                         </Link>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                          {entry.clubFlag && <img src={entry.clubFlag} alt="" style={{ height: 11, borderRadius: 2 }} />}
-                          <span style={{ fontSize: 11, color: 'var(--gs-muted)', fontWeight: 500 }}>{entry.clubName}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginTop: 1 }}>
+                          {entry.clubFlag && <img src={entry.clubFlag} alt="" style={{ height: 9, borderRadius: 1 }} />}
+                          <span style={{ 
+                            fontSize: 9, 
+                            color: 'var(--gs-muted)', 
+                            fontWeight: 500,
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            display: 'block'
+                          }}>
+                            {entry.clubName}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -205,13 +235,14 @@ export function RankingsTable({ entries, gender }: RankingsTableProps) {
                   {visibleApparatus.map(app => {
                     const score = entry[`${app}Score` as keyof RankingEntry] as number
                     return (
-                      <td key={app} style={{ padding: '14px 12px', textAlign: 'center' }}>
+                      <td key={app} style={{ padding: '10px 2px', textAlign: 'center' }}>
                         <span style={{
-                          fontSize: 14, fontWeight: 700,
+                          fontSize: 12, fontWeight: 700,
                           color: score > 0 ? APPARATUS_COLORS[app] : '#CBD5E1',
                           fontVariantNumeric: 'tabular-nums',
+                          letterSpacing: '-0.03em'
                         }}>
-                          {score > 0 ? score.toFixed(2) : '—'}
+                          {score > 0 ? score.toFixed(1) : '—'} 
                         </span>
                       </td>
                     )
@@ -219,21 +250,21 @@ export function RankingsTable({ entries, gender }: RankingsTableProps) {
 
                   {/* Total */}
                   {!focusApparatus && (
-                    <td style={{ padding: '14px 16px', textAlign: 'right', paddingRight: 20 }}>
-                      <span style={{ fontSize: 16, fontWeight: 900, color: 'var(--gs-text)', letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums' }}>
-                        {entry.totalScore.toFixed(2)}
+                    <td style={{ padding: '10px 4px', textAlign: 'right' }}>
+                      <span style={{ fontSize: 13, fontWeight: 900, color: 'var(--gs-text)', letterSpacing: '-0.03em', fontVariantNumeric: 'tabular-nums' }}>
+                        {entry.totalScore.toFixed(1)}
                       </span>
                     </td>
                   )}
 
                   {/* Share */}
-                  <td style={{ padding: '14px 16px', textAlign: 'center' }}>
+                  <td style={{ padding: '10px 0', textAlign: 'center' }}>
                     <button
                       onClick={() => setShowCard(entry)}
-                      style={{ background: 'none', border: 'none', padding: 6, cursor: 'pointer', color: 'var(--gs-primary)', borderRadius: 8 }}
+                      style={{ background: 'none', border: 'none', padding: 2, cursor: 'pointer', color: 'var(--gs-primary)', borderRadius: 4 }}
                       title="Diploma"
                     >
-                      <Share2 size={16} />
+                      <Share2 size={14} />
                     </button>
                   </td>
                 </tr>

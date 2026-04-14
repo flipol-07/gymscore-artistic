@@ -96,15 +96,15 @@ export default function EventoPage({ params: paramsPromise }: { params: Promise<
         <div style={{ background: '#fff', borderBottom: '1px solid var(--gs-border)', padding: '12px 0' }}>
           <div className="gs-container">
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-              <div style={{ display: 'flex', gap: 6 }}>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 {sessions.map((s, idx) => (
                   <button
                     key={s.id}
                     onClick={() => setActiveSessionId(s.id)}
                     style={{
-                      padding: '8px 16px',
+                      padding: '6px 12px',
                       borderRadius: 6,
-                      fontSize: 13,
+                      fontSize: 12,
                       fontWeight: 600,
                       border: '1px solid',
                       cursor: 'pointer',
@@ -120,21 +120,22 @@ export default function EventoPage({ params: paramsPromise }: { params: Promise<
               </div>
 
               {activeSession && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 200 }}>
-                  <div style={{ height: 24, width: 1, background: 'var(--gs-border)', display: 'none' }} className="sm:block" />
-                  <div style={{ fontSize: 13, color: 'var(--gs-muted)' }}>
-                    <div style={{ fontWeight: 600, color: 'var(--gs-text)', marginBottom: 2 }}>
-                      {formatDate(activeSession.date)}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 200 }}>
+                  <div style={{ fontSize: 12, color: 'var(--gs-muted)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                      <span style={{ fontWeight: 600, color: 'var(--gs-text)' }}>
+                        {formatDate(activeSession.date)}
+                      </span>
+                      <a 
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(activeSession.location || competition.location)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="gs-btn-secondary"
+                        style={{ display: 'inline-flex', padding: '4px 10px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', textDecoration: 'none', gap: 4, width: 'fit-content', borderRadius: 6 }}
+                      >
+                        📍 {competition.location}
+                      </a>
                     </div>
-                    <a 
-                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(activeSession.location || competition.location)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="gs-btn-secondary"
-                      style={{ display: 'inline-flex', padding: '6px 12px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', textDecoration: 'none', gap: 6, width: 'fit-content' }}
-                    >
-                      📍 {competition.location}
-                    </a>
                   </div>
                 </div>
               )}
@@ -147,29 +148,29 @@ export default function EventoPage({ params: paramsPromise }: { params: Promise<
           {promotions.length === 0 ? (
             <p style={{ color: 'var(--gs-muted)', fontSize: 14 }}>No hay categorías para esta jornada.</p>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 10 }}>
               {promotions.map((prom) => (
-                <div key={prom.id} className="gs-card" style={{ padding: '16px 20px', position: 'relative', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  <div style={{ position: 'absolute', top: 16, right: 16 }}>
+                <div key={prom.id} className="gs-card" style={{ padding: '12px 14px', position: 'relative', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div style={{ position: 'absolute', top: 12, right: 12 }}>
                     <GenderBadge gender={prom.gender} />
                   </div>
 
                   <div>
-                    <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--gs-text)', marginBottom: 4, paddingRight: 80 }}>
+                    <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--gs-text)', marginBottom: 2, paddingRight: 80, lineHeight: 1.2 }}>
                       {prom.name}
                     </h3>
-                    <p style={{ fontSize: 13, color: 'var(--gs-muted)' }}>
-                      {prom.gymnast_count} gimnastas inscritos
+                    <p style={{ fontSize: 12, color: 'var(--gs-muted)' }}>
+                      {prom.gymnast_count} gimnastas
                     </p>
                   </div>
 
-                  <div style={{ marginTop: 'auto', paddingTop: 8 }}>
+                  <div style={{ marginTop: 'auto', paddingTop: 4 }}>
                     <Link
                       href={`/competiciones/${slug}/${prom.id}`}
                       className={prom.status === 'active' ? 'gs-btn-primary' : 'gs-btn-secondary'}
-                      style={{ fontSize: 13, width: '100%', justifyContent: 'center' }}
+                      style={{ fontSize: 12, width: '100%', justifyContent: 'center', padding: '6px 0', height: 32 }}
                     >
-                      {prom.status === 'active' ? 'Ver notas en directo' : prom.status === 'finished' ? 'Ver resultados finales' : 'Ver clasificación'}
+                      {prom.status === 'active' ? 'En directo' : prom.status === 'finished' ? 'Resultados finales' : 'Ver clasificación'}
                     </Link>
                   </div>
                 </div>

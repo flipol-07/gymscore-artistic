@@ -57,62 +57,64 @@ export function ResultCard({ entry, gender, onClose }: ResultCardProps) {
   if (!mounted) return null
 
   return createPortal(
-    <div
-      onClick={onClose}
-      className="diploma-modal-overlay"
-      style={{
-        position: 'fixed', inset: 0,
-        background: 'rgba(0,0,0,0.88)',
-        backdropFilter: 'blur(12px)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        zIndex: 999999, padding: 20,
+    <div 
+      style={{ 
+        position: 'fixed', inset: 0, 
+        background: 'rgba(0,0,0,0.92)', 
+        zIndex: 9999, 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        padding: 20, 
+        backdropFilter: 'blur(8px)',
+        cursor: 'default'
+      }}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClose();
       }}
     >
-      <div
+      <div 
         onClick={e => e.stopPropagation()}
-        style={{ maxWidth: 940, width: '100%', display: 'flex', flexDirection: 'column', gap: 18 }}
+        style={{ position: 'relative', maxWidth: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24 }}
       >
-        {/* Close */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <button
-            onClick={onClose}
-            style={{
-              background: 'rgba(255,255,255,0.12)', border: 'none', borderRadius: 10,
-              width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer', color: '#fff',
+        {/* Scale Container for Mobile Preview */}
+        <div style={{ 
+          width: '800px', 
+          height: '450px', 
+          transform: typeof window !== 'undefined' && window.innerWidth < 840 ? `scale(${(window.innerWidth - 40) / 800})` : 'none',
+          transformOrigin: 'center center',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <div 
+            ref={cardRef}
+            style={{ 
+              width: '800px', 
+              height: '450px', 
+              background: '#fff', 
+              display: 'flex',
+              overflow: 'hidden',
+              borderRadius: 24,
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
             }}
           >
-            <X size={20} />
-          </button>
-        </div>
-
-        {/* THE DIPLOMA — horizontal 5:3 ratio */}
-        <div
-          ref={cardRef}
-          className="print-diploma"
-          style={{
-            width: 900, height: 540,
-            maxWidth: '100%',
-            background: '#FAFAF8',
-            borderRadius: 16,
-            display: 'flex',
-            overflow: 'hidden',
-            fontFamily: 'Georgia, "Times New Roman", serif',
-            position: 'relative',
-          }}
-        >
-          {/* Left accent stripe */}
-          <div style={{
-            width: 12, background: accentColor, flexShrink: 0,
-          }} />
-
-          {/* Gold/accent side panel */}
-          <div style={{
-            width: 220, flexShrink: 0,
-            background: accentColor,
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            padding: 30, gap: 20,
-          }}>
+            {/* Left Column - High Contrast */}
+            <div style={{ 
+              width: '40%', 
+              background: entry.position === 1 ? 'linear-gradient(135deg, #d4af37 0%, #f1c40f 100%)' : 
+                          entry.position === 2 ? 'linear-gradient(135deg, #95a5a6 0%, #bdc3c7 100%)' :
+                          entry.position === 3 ? 'linear-gradient(135deg, #a0522d 0%, #cd7f32 100%)' :
+                          'linear-gradient(135deg, #2c3e50 0%, #34495e 100%)',
+              color: '#fff',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 40,
+              textAlign: 'center'
+            }}>
             {/* Position badge */}
             <div style={{
               width: 90, height: 90, borderRadius: '50%',
@@ -212,40 +214,43 @@ export function ResultCard({ entry, gender, onClose }: ResultCardProps) {
               </div>
             </div>
           </div>
+          </div>
         </div>
 
         {/* Actions */}
-        <div className="diploma-actions" style={{ display: 'flex', gap: 12 }}>
+        <div style={{ display: 'flex', gap: 12, width: '100%', maxWidth: 400, marginTop: typeof window !== 'undefined' && window.innerWidth < 840 ? -60 : 0 }}>
           <button
             onClick={onClose}
+            className="gs-btn-secondary"
             style={{
-              flex: 1, height: 48, borderRadius: 12,
-              background: 'rgba(255,255,255,0.1)', border: 'none',
-              color: '#fff', fontWeight: 700, cursor: 'pointer',
+              flex: 1, height: 44, borderRadius: 12,
+              background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)',
+              color: '#fff', fontWeight: 600, cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-              fontSize: 14,
+              fontSize: 13,
             }}
           >
-            <X size={18} /> Cerrar
+            <X size={16} /> Cerrar
           </button>
 
           <button
             onClick={handleDownload}
             disabled={loading}
+            className="gs-btn-primary"
             style={{
-              flex: 2, height: 48, borderRadius: 12,
+              flex: 2, height: 44, borderRadius: 12,
               background: '#fff', border: 'none',
               color: '#000', fontWeight: 800, cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-              fontSize: 14,
+              fontSize: 13,
             }}
           >
             {loading ? 'Generando...' : <><Download size={18} /> Descargar PNG</>}
           </button>
         </div>
 
-        <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.45)', fontSize: 12 }}>
-          Diploma horizontal listo para descargar o compartir
+        <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.5)', fontSize: 11, marginTop: typeof window !== 'undefined' && window.innerWidth < 840 ? -40 : 0 }}>
+          Previsualización del diploma (calidad optimizada para compartir)
         </div>
       </div>
     </div>,
