@@ -118,7 +118,7 @@ export function RankingsTable({ entries, gender }: RankingsTableProps) {
       </div>
 
       <div className="ranking-table-container">
-        <table className="ranking-table">
+        <table className="ranking-table ranking-table-main">
           <colgroup>
             <col className="ranking-col-pos" />
             <col className="ranking-col-gymnast" />

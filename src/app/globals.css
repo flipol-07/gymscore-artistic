@@ -275,9 +275,12 @@
     text-underline-offset: 2px;
   }
 
-  /* Table row hover */
-  .ranking-row:hover td {
-    background: #F8FAFC;
+  /* Table row background for sticky columns to inherit */
+  .ranking-row {
+    background: #ffffff;
+  }
+  .ranking-row:hover {
+    background: #F8FAFC !important;
   }
 
   /* New Responsive Ranking Table Classes */
@@ -285,16 +288,16 @@
     width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
+    scrollbar-width: none; /* Hide scrollbar for Firefox */
   }
   .ranking-table-container::-webkit-scrollbar {
-    display: none;
+    display: none; /* Hide scrollbar for Chrome/Safari/Edge */
   }
 
   .ranking-table {
     width: 100%;
     border-collapse: collapse;
-    table-layout: fixed; /* Important for fitting multiple columns */
+    table-layout: fixed; /* Important for fitting multiple columns on desktop */
   }
 
   .ranking-col-pos { width: 44px; }
@@ -304,12 +307,56 @@
   .ranking-col-share { width: 44px; }
 
   @media (max-width: 640px) {
-    .ranking-col-pos { width: 28px; }
-    .ranking-col-gymnast { min-width: 80px; }
-    .ranking-col-apparatus { width: 42px; }
-    .ranking-col-total { width: 50px; }
-    .ranking-col-share { width: 34px; }
+    .ranking-col-pos { width: 36px; }
+    .ranking-col-gymnast { width: 130px; min-width: 130px; }
+    .ranking-col-apparatus { width: 46px; }
+    .ranking-col-total { width: 56px; }
+    .ranking-col-share { width: 40px; }
     
+    .ranking-table {
+      table-layout: auto;
+      min-width: max-content;
+    }
+
+    /* Sticky columns for mobile - ONLY for the main competition rankings */
+    .ranking-table-main th:nth-child(1),
+    .ranking-table-main td:nth-child(1) {
+      position: -webkit-sticky;
+      position: sticky;
+      left: 0;
+      z-index: 10;
+      background: inherit;
+    }
+    
+    .ranking-table-main th:nth-child(2),
+    .ranking-table-main td:nth-child(2) {
+      position: -webkit-sticky;
+      position: sticky;
+      left: 36px; /* Matches width of col-pos */
+      z-index: 10;
+      background: inherit;
+    }
+
+    /* Header specific backgrounds */
+    .ranking-table-main th:nth-child(1),
+    .ranking-table-main th:nth-child(2) {
+      background: var(--gs-bg) !important;
+      z-index: 11;
+    }
+
+    /* Shadow effect for scroll indication */
+    .ranking-table-main th:nth-child(2)::after,
+    .ranking-table-main td:nth-child(2)::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: -6px;
+      bottom: 0;
+      width: 6px;
+      background: linear-gradient(to right, rgba(0,0,0,0.08), transparent);
+      pointer-events: none;
+    }
+
     .gs-container {
       padding: 0 8px; /* Less horizontal padding on mobile */
     }
