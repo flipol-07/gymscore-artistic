@@ -73,7 +73,7 @@ export function FavoritesGrid() {
                   onClick={() => toggleFavorite(g.name)}
                   style={{ position: 'absolute', top: 16, right: 16, background: 'none', border: 'none', cursor: 'pointer', color: '#FFD700' }}
                 >
-                  <Star size={20} fill="currentColor" />
+                  <Star size={24} fill="currentColor" />
                 </button>
                 
                 <h3 style={{ fontSize: 18, fontWeight: 800, color: 'var(--gs-text)', marginBottom: 4 }}>

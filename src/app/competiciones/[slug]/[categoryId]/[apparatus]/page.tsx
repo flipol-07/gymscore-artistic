@@ -164,7 +164,7 @@ export default function AparatoPage({ params: paramsPromise }: Props) {
                               onClick={() => toggleFavorite(entry.gymnastName)}
                               style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: isFav ? '#FFD700' : '#E2E8F0' }}
                             >
-                              <Star size={16} fill={isFav ? 'currentColor' : 'none'} />
+                              <Star size={20} fill={isFav ? 'currentColor' : 'none'} />
                             </button>
                             <div>
                               <div style={{ fontWeight: 800, color: 'var(--gs-text)', fontSize: 15 }}>{entry.gymnastName}</div>

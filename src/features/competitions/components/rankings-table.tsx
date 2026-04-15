@@ -193,7 +193,7 @@ export function RankingsTable({ entries, gender }: RankingsTableProps) {
                         onClick={() => toggleFavorite(entry.gymnastName)}
                         style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: isFav ? '#FFD700' : '#E2E8F0', flexShrink: 0 }}
                       >
-                        <Star size={12} fill={isFav ? 'currentColor' : 'none'} />
+                        <Star size={16} fill={isFav ? 'currentColor' : 'none'} />
                       </button>
                       <div style={{ minWidth: 0 }}>
                         <Link
