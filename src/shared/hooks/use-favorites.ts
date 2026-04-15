@@ -2,11 +2,19 @@
 
 import { useState, useEffect } from 'react'
 
+const STORAGE_KEY = 'gs_favorite_gymnasts'
+
+/**
+ * Favorites hook based on gymnast NAME (not inscription ID).
+ * This way, a gymnast stays favorited across all competitions forever.
+ */
 export function useFavorites() {
   const [favorites, setFavorites] = useState<string[]>([])
 
   useEffect(() => {
-    const stored = localStorage.getItem('gs_favorites')
+    // Migrate old inscription-based favorites are ignored
+    // New system uses gymnast names
+    const stored = localStorage.getItem(STORAGE_KEY)
     if (stored) {
       try {
         setFavorites(JSON.parse(stored))
@@ -16,18 +24,19 @@ export function useFavorites() {
     }
   }, [])
 
-  const toggleFavorite = (gymnastId: string) => {
+  const toggleFavorite = (gymnastName: string) => {
     setFavorites(prev => {
-      const next = prev.includes(gymnastId)
-        ? prev.filter(id => id !== gymnastId)
-        : [...prev, gymnastId]
+      const normalized = gymnastName.trim()
+      const next = prev.includes(normalized)
+        ? prev.filter(name => name !== normalized)
+        : [...prev, normalized]
       
-      localStorage.setItem('gs_favorites', JSON.stringify(next))
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
       return next
     })
   }
 
-  const isFavorite = (gymnastId: string) => favorites.includes(gymnastId)
+  const isFavorite = (gymnastName: string) => favorites.includes(gymnastName.trim())
 
   return { favorites, toggleFavorite, isFavorite }
 }

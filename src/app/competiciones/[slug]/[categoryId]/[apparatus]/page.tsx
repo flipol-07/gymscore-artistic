@@ -152,7 +152,7 @@ export default function AparatoPage({ params: paramsPromise }: Props) {
                 </thead>
                 <tbody>
                   {rankings.map((entry) => {
-                    const isFav = isFavorite(entry.inscriptionId)
+                    const isFav = isFavorite(entry.gymnastName)
                     return (
                       <tr key={entry.inscriptionId} style={{ borderBottom: '1px solid var(--gs-border)' }}>
                         <td style={{ padding: '16px', textAlign: 'center' }}>
@@ -161,7 +161,7 @@ export default function AparatoPage({ params: paramsPromise }: Props) {
                         <td style={{ padding: '16px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                             <button 
-                              onClick={() => toggleFavorite(entry.inscriptionId)}
+                              onClick={() => toggleFavorite(entry.gymnastName)}
                               style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: isFav ? '#FFD700' : '#E2E8F0' }}
                             >
                               <Star size={16} fill={isFav ? 'currentColor' : 'none'} />

@@ -318,14 +318,15 @@
       min-width: max-content;
     }
 
-    /* Sticky columns for mobile - ONLY for the main competition rankings */
+    /* Sticky columns for mobile — position + gymnast name stay fixed */
+    /* IMPORTANT: iOS Safari needs explicit backgrounds, NOT "inherit" */
     .ranking-table-main th:nth-child(1),
     .ranking-table-main td:nth-child(1) {
       position: -webkit-sticky;
       position: sticky;
       left: 0;
       z-index: 10;
-      background: inherit;
+      background: #ffffff !important;
     }
     
     .ranking-table-main th:nth-child(2),
@@ -334,17 +335,23 @@
       position: sticky;
       left: 36px; /* Matches width of col-pos */
       z-index: 10;
-      background: inherit;
+      background: #ffffff !important;
     }
 
-    /* Header specific backgrounds */
+    /* Header row gets the BG color to match */
     .ranking-table-main th:nth-child(1),
     .ranking-table-main th:nth-child(2) {
       background: var(--gs-bg) !important;
       z-index: 11;
     }
 
-    /* Shadow effect for scroll indication */
+    /* Row hover: sticky cells must also pick up the hover bg */
+    .ranking-row:hover td:nth-child(1),
+    .ranking-row:hover td:nth-child(2) {
+      background: #F8FAFC !important;
+    }
+
+    /* Shadow separator between fixed name and scrollable scores */
     .ranking-table-main th:nth-child(2)::after,
     .ranking-table-main td:nth-child(2)::after {
       content: '';
@@ -353,7 +360,7 @@
       right: -6px;
       bottom: 0;
       width: 6px;
-      background: linear-gradient(to right, rgba(0,0,0,0.08), transparent);
+      background: linear-gradient(to right, rgba(0,0,0,0.06), transparent);
       pointer-events: none;
     }
 

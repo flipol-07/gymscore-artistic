@@ -163,7 +163,7 @@ export function RankingsTable({ entries, gender }: RankingsTableProps) {
           </thead>
           <tbody>
             {displayEntries.map((entry) => {
-              const isFav = isFavorite(entry.inscriptionId)
+              const isFav = isFavorite(entry.gymnastName)
               return (
                 <tr
                   key={entry.inscriptionId}
@@ -190,7 +190,7 @@ export function RankingsTable({ entries, gender }: RankingsTableProps) {
                   <td style={{ padding: '10px 4px', overflow: 'hidden' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                       <button
-                        onClick={() => toggleFavorite(entry.inscriptionId)}
+                        onClick={() => toggleFavorite(entry.gymnastName)}
                         style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: isFav ? '#FFD700' : '#E2E8F0', flexShrink: 0 }}
                       >
                         <Star size={12} fill={isFav ? 'currentColor' : 'none'} />
