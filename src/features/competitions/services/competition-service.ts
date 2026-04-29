@@ -132,7 +132,7 @@ export async function getRankings(promotionId: string): Promise<RankingEntry[]> 
       id,
       gymnasts (full_name),
       clubs (name, flag_url),
-      scores (apparatus, score)
+      scores (apparatus, score, d_score, e_score)
     `)
     .eq('promotion_id', promotionId)
 
@@ -146,6 +146,14 @@ export async function getRankings(promotionId: string): Promise<RankingEntry[]> 
     const scores = ins.scores || []
     const getScore = (app: string) => {
       const val = scores.find((s: any) => s.apparatus === app)?.score
+      return val != null ? parseFloat(val) : 0
+    }
+    const getD = (app: string) => {
+      const val = scores.find((s: any) => s.apparatus === app)?.d_score
+      return val != null ? parseFloat(val) : 0
+    }
+    const getE = (app: string) => {
+      const val = scores.find((s: any) => s.apparatus === app)?.e_score
       return val != null ? parseFloat(val) : 0
     }
     const vault = getScore('vault')
@@ -164,14 +172,14 @@ export async function getRankings(promotionId: string): Promise<RankingEntry[]> 
       gymnastName: ins.gymnasts?.full_name ?? 'Desconocida',
       clubName: ins.clubs?.name ?? 'Club desconocido',
       clubFlag: ins.clubs?.flag_url ?? undefined,
-      vaultScore: vault,
-      barsScore: bars,
-      beamScore: beam,
-      floorScore: floor,
-      pommelScore: pommel,
-      ringsScore: rings,
-      p_barsScore: p_bars,
-      h_barScore: h_bar,
+      vaultScore: vault, barsDScore: getD('bars'), barsEScore: getE('bars'),
+      barsScore: bars, vaultDScore: getD('vault'), vaultEScore: getE('vault'),
+      beamScore: beam, beamDScore: getD('beam'), beamEScore: getE('beam'),
+      floorScore: floor, floorDScore: getD('floor'), floorEScore: getE('floor'),
+      pommelScore: pommel, pommelDScore: getD('pommel'), pommelEScore: getE('pommel'),
+      ringsScore: rings, ringsDScore: getD('rings'), ringsEScore: getE('rings'),
+      p_barsScore: p_bars, p_barsDScore: getD('p_bars'), p_barsEScore: getE('p_bars'),
+      h_barScore: h_bar, h_barDScore: getD('h_bar'), h_barEScore: getE('h_bar'),
       totalScore: total
     }
   })
@@ -190,7 +198,7 @@ export async function getInscriptionsByIds(ids: string[]): Promise<RankingEntry[
       id,
       gymnasts (full_name),
       clubs (name, flag_url),
-      scores (apparatus, score),
+      scores (apparatus, score, d_score, e_score),
       promotions (
         id,
         competitions (slug)
@@ -203,6 +211,8 @@ export async function getInscriptionsByIds(ids: string[]): Promise<RankingEntry[
   return data.map((ins: any) => {
     const scores = ins.scores || []
     const getScore = (app: string) => parseFloat(scores.find((s: any) => s.apparatus === app)?.score || 0)
+    const getD = (app: string) => parseFloat(scores.find((s: any) => s.apparatus === app)?.d_score || 0)
+    const getE = (app: string) => parseFloat(scores.find((s: any) => s.apparatus === app)?.e_score || 0)
     const vault = getScore('vault')
     const bars = getScore('bars')
     const beam = getScore('beam')
@@ -219,14 +229,14 @@ export async function getInscriptionsByIds(ids: string[]): Promise<RankingEntry[
       gymnastName: ins.gymnasts.full_name,
       clubName: ins.clubs.name,
       clubFlag: ins.clubs.flag_url,
-      vaultScore: vault,
-      barsScore: bars,
-      beamScore: beam,
-      floorScore: floor,
-      pommelScore: pommel,
-      ringsScore: rings,
-      p_barsScore: p_bars,
-      h_barScore: h_bar,
+      vaultScore: vault, vaultDScore: getD('vault'), vaultEScore: getE('vault'),
+      barsScore: bars, barsDScore: getD('bars'), barsEScore: getE('bars'),
+      beamScore: beam, beamDScore: getD('beam'), beamEScore: getE('beam'),
+      floorScore: floor, floorDScore: getD('floor'), floorEScore: getE('floor'),
+      pommelScore: pommel, pommelDScore: getD('pommel'), pommelEScore: getE('pommel'),
+      ringsScore: rings, ringsDScore: getD('rings'), ringsEScore: getE('rings'),
+      p_barsScore: p_bars, p_barsDScore: getD('p_bars'), p_barsEScore: getE('p_bars'),
+      h_barScore: h_bar, h_barDScore: getD('h_bar'), h_barEScore: getE('h_bar'),
       totalScore: total,
       competitionSlug: (ins.promotions as any)?.competitions?.slug,
       categoryId: (ins.promotions as any)?.id
@@ -345,15 +355,22 @@ export async function updateCompetitionStatus(competitionId: string, status: 'dr
   return { success: !error, error }
 }
 
-export async function updateScore(inscriptionId: string, apparatus: Apparatus, score: number, _penalty: number = 0, password?: string) {
+export async function updateScore(
+  inscriptionId: string,
+  apparatus: Apparatus,
+  score: number,
+  dScore: number = 0,
+  eScore: number = 0,
+  password?: string
+) {
   const supabase = createClient()
   const { error } = await supabase
     .rpc('save_score_with_password', {
       p_inscription_id: inscriptionId,
       p_apparatus: apparatus,
       p_score: score,
-      p_d_score: 0,
-      p_e_score: 0,
+      p_d_score: dScore,
+      p_e_score: eScore,
       p_password: password
     })
 

@@ -1,11 +1,10 @@
 'use client'
 
 import { useEffect, useState, use } from 'react'
-import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { Navbar } from '@/shared/components/navbar'
 import { Footer } from '@/shared/components/footer'
 import * as service from '@/features/competitions/services/competition-service'
-import { FEMALE_APPARATUS, MALE_APPARATUS, type Apparatus } from '@/features/competitions/types'
 import { RankingsTable } from '@/features/competitions/components/rankings-table'
 import type { RankingEntry, Competition, Promotion } from '@/features/competitions/types'
 import { createClient as createBrowserClient } from '@/lib/supabase/client'
@@ -17,7 +16,9 @@ interface Props {
 export default function ResultadosPage({ params: paramsPromise }: Props) {
   const params = use(paramsPromise)
   const { slug, categoryId } = params
-  
+  const searchParams = useSearchParams()
+  const focusGymnast = searchParams.get('focus') ? decodeURIComponent(searchParams.get('focus')!) : null
+
   const [competition, setCompetition] = useState<Competition | null>(null)
   const [promotion, setPromotion] = useState<Promotion | null>(null)
   const [rankings, setRankings] = useState<RankingEntry[]>([])
@@ -67,8 +68,6 @@ export default function ResultadosPage({ params: paramsPromise }: Props) {
   if (loading) return <div style={{ padding: 40, textAlign: 'center', fontWeight: 'bold' }}>Cargando resultados...</div>
   if (!promotion) return <div style={{ padding: 40, textAlign: 'center' }}>Categoría no encontrada.</div>
 
-  const apparatus: Apparatus[] = promotion.gender === 'female' ? FEMALE_APPARATUS : MALE_APPARATUS
-
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--gs-bg)' }}>
       <Navbar programUrl={competition?.programUrl} showBack backHref={`/competiciones/${slug}`} />
@@ -80,7 +79,7 @@ export default function ResultadosPage({ params: paramsPromise }: Props) {
             <h2 style={{ fontSize: 13, fontWeight: 700, color: 'var(--gs-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>
               COMPETICIÓN
             </h2>
-            <h1 style={{ fontSize: 32, fontWeight: 900, color: '#111', marginBottom: 20, letterSpacing: '-0.03em', lineHeight: 1 }}>
+            <h1 style={{ fontSize: 'clamp(20px, 6vw, 32px)', fontWeight: 900, color: '#111', marginBottom: 20, letterSpacing: '-0.03em', lineHeight: 1.1, wordBreak: 'break-word' }}>
               {competition?.name || 'Cargando...'}
             </h1>
             
@@ -125,9 +124,9 @@ export default function ResultadosPage({ params: paramsPromise }: Props) {
         </div>
 
         {/* Rankings table */}
-        <div className="gs-container" style={{ padding: '24px 8px' }}>
-          <div className="gs-card" style={{ overflow: 'hidden', padding: 0, borderRadius: 12 }}>
-            <RankingsTable entries={rankings} gender={promotion.gender} />
+        <div className="gs-container ranking-page-container">
+          <div className="gs-card ranking-page-card" style={{ overflow: 'hidden', padding: 0, borderRadius: 12 }}>
+            <RankingsTable entries={rankings} gender={promotion.gender} focusGymnast={focusGymnast} />
           </div>
         </div>
       </main>

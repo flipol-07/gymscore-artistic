@@ -44,6 +44,9 @@ export default function AdminCompeticionPage() {
   
   const [editingScore, setEditingScore] = useState<{ id: string, app: Apparatus } | null>(null)
   const [tempScore, setTempScore] = useState<string>('')
+  const [tempD, setTempD] = useState<string>('')
+  const [tempE, setTempE] = useState<string>('')
+  const [tempPenalty, setTempPenalty] = useState<string>('')
   const [scores, setScores] = useState<Record<string, Record<string, { total: number }>>>({})
   const [loading, setLoading] = useState(true)
   const [processing, setProcessing] = useState(false)
@@ -153,15 +156,21 @@ export default function AdminCompeticionPage() {
     setProcessing(false)
   }
 
-  const handleUpdateScore = async (inscriptionId: string, app: Apparatus, val: number) => {
+  const handleUpdateScore = async (
+    inscriptionId: string,
+    app: Apparatus,
+    val: number,
+    dScore: number = 0,
+    eScore: number = 0,
+  ) => {
     const pass = isSuper ? competition?.adminPassword : enteredPassword
-    const { success } = await service.updateScore(inscriptionId, app, val, 0, pass || undefined)
+    const { success } = await service.updateScore(inscriptionId, app, val, dScore, eScore, pass || undefined)
     if (success) {
-      setScores(prev => ({ 
-        ...prev, 
-        [inscriptionId]: { 
-          ...prev[inscriptionId], 
-          [app]: { total: val } 
+      setScores(prev => ({
+        ...prev,
+        [inscriptionId]: {
+          ...prev[inscriptionId],
+          [app]: { total: val }
         }
       }))
     } else {
@@ -545,46 +554,101 @@ export default function AdminCompeticionPage() {
                                       const current = entryOverrides[app]?.total ?? original
                                       const isEditing = editingScore?.id === key && editingScore?.app === app
 
+                                      const dOriginal = (entry[`${app}DScore` as keyof RankingEntry] as number) ?? 0
+                                      const eOriginal = (entry[`${app}EScore` as keyof RankingEntry] as number) ?? 0
+                                      const penOriginal = (dOriginal > 0 || eOriginal > 0)
+                                        ? Math.round((current - dOriginal - eOriginal) * 1000) / 1000
+                                        : 0
+
+                                      const commit = () => {
+                                        const d = parseFloat(tempD) || 0
+                                        const e = parseFloat(tempE) || 0
+                                        const pen = parseFloat(tempPenalty) || 0
+                                        const manualTotal = parseFloat(tempScore)
+                                        // Si se ha tocado D o E, recalcular total con penalty.
+                                        // Si solo se introduce el total, mantenerlo.
+                                        const computed = (d > 0 || e > 0) ? (d + e + pen) : (isNaN(manualTotal) ? 0 : manualTotal)
+                                        handleUpdateScore(key, app, computed, d, e)
+                                        setEditingScore(null)
+                                      }
+
                                       return (
-                                        <td key={app} style={{ textAlign: 'center', padding: '12px 6px' }}>
+                                        <td key={app} style={{ textAlign: 'center', padding: '12px 6px', verticalAlign: 'top' }}>
                                           {isEditing ? (
-                                            <input
-                                              type="number"
-                                              step="0.01"
-                                              className="gs-input"
-                                              value={tempScore}
-                                              onChange={e => setTempScore(e.target.value)}
-                                              onBlur={() => {
-                                                const val = parseFloat(tempScore) || 0
-                                                handleUpdateScore(key, app, val)
-                                                setEditingScore(null)
-                                              }}
-                                              onKeyDown={e => {
-                                                if (e.key === 'Enter') {
-                                                  const val = parseFloat(tempScore) || 0
-                                                  handleUpdateScore(key, app, val)
-                                                  setEditingScore(null)
-                                                }
-                                              }}
-                                              autoFocus
-                                              style={{ width: 60, height: 32, textAlign: 'center', fontSize: 14, fontWeight: 700, padding: 0 }}
-                                            />
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center' }}>
+                                              <div style={{ display: 'flex', gap: 4 }}>
+                                                <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', fontSize: 9, color: '#60a5fa', fontWeight: 700 }}>
+                                                  D
+                                                  <input
+                                                    type="number" step="0.1"
+                                                    value={tempD}
+                                                    onChange={e => setTempD(e.target.value)}
+                                                    onKeyDown={e => { if (e.key === 'Enter') commit() }}
+                                                    style={{ width: 44, height: 26, textAlign: 'center', fontSize: 12, fontWeight: 700, border: '1px solid #c7d2fe', borderRadius: 4, padding: 0 }}
+                                                  />
+                                                </label>
+                                                <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', fontSize: 9, color: '#10b981', fontWeight: 700 }}>
+                                                  E
+                                                  <input
+                                                    type="number" step="0.1"
+                                                    value={tempE}
+                                                    onChange={e => setTempE(e.target.value)}
+                                                    onKeyDown={e => { if (e.key === 'Enter') commit() }}
+                                                    style={{ width: 44, height: 26, textAlign: 'center', fontSize: 12, fontWeight: 700, border: '1px solid #a7f3d0', borderRadius: 4, padding: 0 }}
+                                                  />
+                                                </label>
+                                                <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', fontSize: 9, color: '#ef4444', fontWeight: 700 }}>
+                                                  Pen
+                                                  <input
+                                                    type="number" step="0.1"
+                                                    placeholder="-0.3"
+                                                    value={tempPenalty}
+                                                    onChange={e => setTempPenalty(e.target.value)}
+                                                    onKeyDown={e => { if (e.key === 'Enter') commit() }}
+                                                    style={{ width: 44, height: 26, textAlign: 'center', fontSize: 12, fontWeight: 700, border: '1px solid #fecaca', borderRadius: 4, padding: 0 }}
+                                                  />
+                                                </label>
+                                              </div>
+                                              <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                                                <span style={{ fontSize: 10, color: 'var(--gs-muted)' }}>Total:</span>
+                                                <input
+                                                  type="number" step="0.01"
+                                                  value={tempScore}
+                                                  onChange={e => setTempScore(e.target.value)}
+                                                  onKeyDown={e => { if (e.key === 'Enter') commit() }}
+                                                  style={{ width: 56, height: 24, textAlign: 'center', fontSize: 12, fontWeight: 800, border: '1px solid #cbd5e1', borderRadius: 4, padding: 0 }}
+                                                />
+                                                <button onClick={commit} style={{ background: '#10b981', color: '#fff', border: 'none', borderRadius: 4, padding: '3px 8px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>OK</button>
+                                                <button onClick={() => setEditingScore(null)} style={{ background: 'transparent', color: '#94a3b8', border: 'none', fontSize: 11, cursor: 'pointer' }}>×</button>
+                                              </div>
+                                            </div>
                                           ) : (
-                                            <button 
+                                            <button
                                               onClick={() => {
                                                 setTempScore(current.toString())
+                                                setTempD(dOriginal > 0 ? dOriginal.toString() : '')
+                                                setTempE(eOriginal > 0 ? eOriginal.toString() : '')
+                                                setTempPenalty(penOriginal < 0 ? penOriginal.toString() : '')
                                                 setEditingScore({ id: key, app })
                                               }}
-                                              style={{ 
-                                                background: 'transparent', 
-                                                border: 'none', 
-                                                cursor: 'pointer', 
-                                                fontWeight: 800, 
-                                                color: 'var(--gs-text)', 
-                                                fontSize: 16 
+                                              style={{
+                                                background: 'transparent',
+                                                border: 'none',
+                                                cursor: 'pointer',
+                                                fontWeight: 800,
+                                                color: 'var(--gs-text)',
+                                                fontSize: 16,
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                alignItems: 'center',
+                                                lineHeight: 1.1,
+                                                margin: '0 auto',
                                               }}
                                             >
-                                              {current.toFixed(2)}
+                                              <span>{current.toFixed(2)}</span>
+                                              {penOriginal < -0.001 && (
+                                                <span style={{ fontSize: 9, color: '#ef4444', fontWeight: 700 }}>{penOriginal.toFixed(2)}</span>
+                                              )}
                                             </button>
                                           )}
                                         </td>

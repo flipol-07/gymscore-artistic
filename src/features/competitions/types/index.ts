@@ -118,6 +118,23 @@ export interface RankingEntry {
   totalScore: number
   competitionSlug?: string
   categoryId?: string
+  // Desglose D/E por aparato (0 si no disponible)
+  vaultDScore: number
+  vaultEScore: number
+  barsDScore: number
+  barsEScore: number
+  beamDScore: number
+  beamEScore: number
+  floorDScore: number
+  floorEScore: number
+  pommelDScore: number
+  pommelEScore: number
+  ringsDScore: number
+  ringsEScore: number
+  p_barsDScore: number
+  p_barsEScore: number
+  h_barDScore: number
+  h_barEScore: number
 }
 
 export interface GymnastHistory {

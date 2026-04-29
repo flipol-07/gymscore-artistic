@@ -51,12 +51,22 @@ export const DEMO_PROMOTIONS: Promotion[] = [
   { id: 'prom-5-5', sessionId: 'ses-5-3', competitionId: 'comp-5', categoryId: 'cat-5-5', name: 'Infantil', gender: 'female', gymnast_count: 8, status: 'pending' },
 ]
 
+const zeroDesglose = {
+  vaultDScore: 0, vaultEScore: 0,
+  barsDScore: 0, barsEScore: 0,
+  beamDScore: 0, beamEScore: 0,
+  floorDScore: 0, floorEScore: 0,
+  pommelDScore: 0, pommelEScore: 0,
+  ringsDScore: 0, ringsEScore: 0,
+  p_barsDScore: 0, p_barsEScore: 0,
+  h_barDScore: 0, h_barEScore: 0,
+}
 const zeroMale = { pommelScore: 0, ringsScore: 0, p_barsScore: 0, h_barScore: 0 }
 export const DEMO_RANKINGS: RankingEntry[] = [
-  { position: 1, inscriptionId: 'ins-1', gymnastName: 'Lucía García', clubName: 'C.G. Barcelona', vaultScore: 12.500, barsScore: 11.800, beamScore: 13.200, floorScore: 12.100, totalScore: 49.600, ...zeroMale },
-  { position: 2, inscriptionId: 'ins-2', gymnastName: 'Abril Martínez', clubName: 'Salt i Vol', vaultScore: 12.400, barsScore: 12.100, beamScore: 11.500, floorScore: 12.400, totalScore: 48.400, ...zeroMale },
-  { position: 3, inscriptionId: 'ins-3', gymnastName: 'Martina Soler', clubName: 'Gimnàstic Osona', vaultScore: 11.800, barsScore: 10.950, beamScore: 12.700, floorScore: 11.900, totalScore: 47.350, ...zeroMale },
-  { position: 4, inscriptionId: 'ins-4', gymnastName: 'Sofía Rodríguez', clubName: 'C.G. Barcelona', vaultScore: 12.100, barsScore: 11.200, beamScore: 11.900, floorScore: 11.500, totalScore: 46.700, ...zeroMale },
-  { position: 5, inscriptionId: 'ins-5', gymnastName: 'Emma Puig', clubName: 'Salt i Vol', vaultScore: 11.950, barsScore: 10.500, beamScore: 12.100, floorScore: 12.000, totalScore: 46.550, ...zeroMale },
-  { position: 6, inscriptionId: 'ins-6', gymnastName: 'Júlia Valls', clubName: 'Gimnàstic Osona', vaultScore: 12.000, barsScore: 11.400, beamScore: 10.800, floorScore: 11.850, totalScore: 46.050, ...zeroMale },
+  { position: 1, inscriptionId: 'ins-1', gymnastName: 'Lucía García', clubName: 'C.G. Barcelona', vaultScore: 12.500, barsScore: 11.800, beamScore: 13.200, floorScore: 12.100, totalScore: 49.600, ...zeroMale, ...zeroDesglose, vaultDScore: 5.4, vaultEScore: 7.1 },
+  { position: 2, inscriptionId: 'ins-2', gymnastName: 'Abril Martínez', clubName: 'Salt i Vol', vaultScore: 12.400, barsScore: 12.100, beamScore: 11.500, floorScore: 12.400, totalScore: 48.400, ...zeroMale, ...zeroDesglose },
+  { position: 3, inscriptionId: 'ins-3', gymnastName: 'Martina Soler', clubName: 'Gimnàstic Osona', vaultScore: 11.800, barsScore: 10.950, beamScore: 12.700, floorScore: 11.900, totalScore: 47.350, ...zeroMale, ...zeroDesglose },
+  { position: 4, inscriptionId: 'ins-4', gymnastName: 'Sofía Rodríguez', clubName: 'C.G. Barcelona', vaultScore: 12.100, barsScore: 11.200, beamScore: 11.900, floorScore: 11.500, totalScore: 46.700, ...zeroMale, ...zeroDesglose },
+  { position: 5, inscriptionId: 'ins-5', gymnastName: 'Emma Puig', clubName: 'Salt i Vol', vaultScore: 11.950, barsScore: 10.500, beamScore: 12.100, floorScore: 12.000, totalScore: 46.550, ...zeroMale, ...zeroDesglose },
+  { position: 6, inscriptionId: 'ins-6', gymnastName: 'Júlia Valls', clubName: 'Gimnàstic Osona', vaultScore: 12.000, barsScore: 11.400, beamScore: 10.800, floorScore: 11.850, totalScore: 46.050, ...zeroMale, ...zeroDesglose },
 ]

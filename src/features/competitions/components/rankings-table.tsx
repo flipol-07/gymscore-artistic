@@ -1,17 +1,20 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { Trophy, Star, Share2, X, ChevronRight } from 'lucide-react'
+import { Trophy, Star, Share2, ChevronDown } from 'lucide-react'
 import { APPARATUS_NAMES, FEMALE_APPARATUS, MALE_APPARATUS } from '../types'
 import type { RankingEntry, Apparatus } from '../types'
 import { useFavorites } from '@/shared/hooks/use-favorites'
 import { ResultCard } from './result-card'
 import { ApparatusIcon } from './apparatus-icon'
+import { ScoreBreakdown } from './score-breakdown-popover'
 
 interface RankingsTableProps {
   entries: RankingEntry[]
   gender: 'female' | 'male'
+  /** Si se pasa, resalta y hace scroll a la fila de ese gimnasta */
+  focusGymnast?: string | null
 }
 
 const APPARATUS_COLORS: Record<Apparatus, string> = {
@@ -25,36 +28,30 @@ const APPARATUS_COLORS: Record<Apparatus, string> = {
   h_bar:  '#14B8A6',
 }
 
-const APPARATUS_BGS: Record<Apparatus, string> = {
-  vault: 'https://images.unsplash.com/photo-1590725350314-e590059f0b18?q=80&w=800&auto=format&fit=crop',
-  bars: 'https://images.unsplash.com/photo-1599839619722-39751411ea63?q=80&w=800&auto=format&fit=crop',
-  beam: 'https://images.unsplash.com/photo-1629168434771-4ce8b0007fe9?q=80&w=800&auto=format&fit=crop',
-  floor: 'https://images.unsplash.com/photo-1518610196726-25e8bc1dc6ee?q=80&w=800&auto=format&fit=crop',
-  pommel: 'https://images.unsplash.com/photo-1590725350285-d8cfcc54cecd?q=80&w=800&auto=format&fit=crop',
-  rings: 'https://images.unsplash.com/photo-1610478052136-15ec41b31a1a?q=80&w=800&auto=format&fit=crop',
-  p_bars: 'https://images.unsplash.com/photo-1541252876612-e8c187be7aa6?q=80&w=800&auto=format&fit=crop',
-  h_bar: 'https://images.unsplash.com/photo-1517130038641-a774d04afb3c?q=80&w=800&auto=format&fit=crop',
-}
-
-export function RankingsTable({ entries, gender }: RankingsTableProps) {
+export function RankingsTable({ entries, gender, focusGymnast }: RankingsTableProps) {
   const { isFavorite, toggleFavorite } = useFavorites()
   const [showCard, setShowCard] = useState<RankingEntry | null>(null)
   const [focusApparatus, setFocusApparatus] = useState<Apparatus | null>(null)
+  const focusRowRef = useRef<HTMLTableRowElement>(null)
 
   const baseApparatus: Apparatus[] = gender === 'female' ? FEMALE_APPARATUS : MALE_APPARATUS
-  const visibleApparatus = focusApparatus ? [focusApparatus] : baseApparatus
+
+  // Scroll a la fila enfocada cuando llegan las entries
+  useEffect(() => {
+    if (!focusGymnast || entries.length === 0) return
+    const timer = setTimeout(() => {
+      focusRowRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [focusGymnast, entries.length])
 
   const displayEntries = useMemo(() => {
     if (!focusApparatus) return entries
-    
     const scoreKey = `${focusApparatus}Score` as keyof RankingEntry
     return [...entries]
       .filter(e => (e[scoreKey] as number) > 0)
       .sort((a, b) => (b[scoreKey] as number) - (a[scoreKey] as number))
-      .map((entry, index) => ({
-        ...entry,
-        position: index + 1
-      }))
+      .map((entry, index) => ({ ...entry, position: index + 1 }))
   }, [entries, focusApparatus])
 
   if (entries.length === 0) {
@@ -67,65 +64,55 @@ export function RankingsTable({ entries, gender }: RankingsTableProps) {
     )
   }
 
+  // Detectar si alguna entrada tiene desglose D/E para mostrar el aviso
+  const hasAnyBreakdown = entries.some(e =>
+    baseApparatus.some(app => {
+      const d = (e[`${app}DScore` as keyof RankingEntry] as number) ?? 0
+      const eVal = (e[`${app}EScore` as keyof RankingEntry] as number) ?? 0
+      return d > 0 || eVal > 0
+    })
+  )
+
   return (
     <>
-      {/* Apparatus chips — tap to see focused ranking */}
-      <div style={{
-        padding: '16px 16px 12px',
-        display: 'flex', gap: 8,
-        overflowX: 'auto',
-        scrollbarWidth: 'none',
-      }}>
-        <button
-          onClick={() => setFocusApparatus(null)}
-          style={{
+      {hasAnyBreakdown && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          padding: '8px 14px',
+          fontSize: 11,
+          color: 'var(--gs-muted)',
+          background: 'var(--gs-bg)',
+          borderBottom: '1px solid var(--gs-border)',
+          fontWeight: 500,
+          letterSpacing: '-0.01em',
+        }}>
+          <span style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 16,
+            height: 16,
+            borderRadius: '50%',
+            background: 'var(--gs-primary)',
+            color: '#fff',
+            fontSize: 10,
+            fontWeight: 800,
             flexShrink: 0,
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 5,
-            padding: '10px 14px', borderRadius: 14,
-            background: focusApparatus === null ? '#111' : '#f1f5f9',
-            border: `1.5px solid ${focusApparatus === null ? '#000' : '#e2e8f0'}`,
-            cursor: 'pointer', color: focusApparatus === null ? '#fff' : '#64748b',
-            transition: 'all 0.15s', minWidth: 68,
-            boxShadow: focusApparatus === null ? '0 4px 12px rgba(0,0,0,0.1)' : 'none',
-          }}
-        >
-          <span style={{ fontSize: 13, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Todas</span>
-        </button>
-        {baseApparatus.map(app => {
-          const isFocused = focusApparatus === app
-          return (
-          <button
-            key={app}
-            onClick={() => setFocusApparatus(isFocused ? null : app)}
-            style={{
-              flexShrink: 0,
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
-              padding: '10px 14px', borderRadius: 14,
-              background: isFocused ? APPARATUS_COLORS[app] : APPARATUS_COLORS[app] + '12',
-              border: `1.5px solid ${isFocused ? APPARATUS_COLORS[app] : APPARATUS_COLORS[app] + '30'}`,
-              cursor: 'pointer', color: isFocused ? '#fff' : APPARATUS_COLORS[app],
-              transition: 'all 0.15s', minWidth: 68,
-              boxShadow: isFocused ? '0 4px 12px rgba(0,0,0,0.1)' : 'none',
-              transform: isFocused ? 'translateY(-2px)' : 'none',
-            }}
-          >
-            <ApparatusIcon apparatus={app} size={22} />
-            <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', lineHeight: 1 }}>
-              {APPARATUS_NAMES[app]}
-            </span>
-          </button>
-        )})}
-      </div>
-
+          }}>i</span>
+          <span>Pulsa una nota de cualquier aparato para ver el desglose <strong style={{ color: 'var(--gs-primary)' }}>D</strong> + <strong style={{ color: 'var(--gs-success)' }}>E</strong>{' '}+ <strong style={{ color: 'var(--gs-live)' }}>Pen</strong>.</span>
+        </div>
+      )}
       <div className="ranking-table-container">
         <table className="ranking-table ranking-table-main">
           <colgroup>
             <col className="ranking-col-pos" />
             <col className="ranking-col-gymnast" />
-            {visibleApparatus.map(app => (
+            {baseApparatus.map(app => (
               <col key={`col-${app}`} className="ranking-col-apparatus" />
             ))}
-            {!focusApparatus && <col className="ranking-col-total" />}
+            <col className="ranking-col-total" />
             <col className="ranking-col-share" />
           </colgroup>
           <thead>
@@ -136,74 +123,85 @@ export function RankingsTable({ entries, gender }: RankingsTableProps) {
                   Gim.
                 </span>
               </th>
-              {visibleApparatus.map(app => (
-                <th
-                  key={app}
-                  onClick={() => setFocusApparatus(focusApparatus === app ? null : app)}
-                  style={{ padding: '6px 2px', textAlign: 'center', cursor: 'pointer', userSelect: 'none' }}
-                  title={`Ver ranking de ${APPARATUS_NAMES[app]}`}
-                >
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
-                    <div style={{ color: APPARATUS_COLORS[app] }}>
-                      <ApparatusIcon apparatus={app} size={16} />
+              {baseApparatus.map(app => {
+                const isFocused = focusApparatus === app
+                const isAnyFocused = focusApparatus !== null
+                // Default: cada icono con su color. Cuando uno está activo: el resto en gris.
+                const color = isAnyFocused
+                  ? (isFocused ? APPARATUS_COLORS[app] : '#CBD5E1')
+                  : APPARATUS_COLORS[app]
+                return (
+                  <th
+                    key={app}
+                    onClick={() => setFocusApparatus(isFocused ? null : app)}
+                    style={{ padding: '6px 2px', textAlign: 'center', cursor: 'pointer', userSelect: 'none' }}
+                    title={`Ordenar por ${APPARATUS_NAMES[app]}`}
+                  >
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                      <ApparatusIcon apparatus={app} size={28} tintColor={color} />
+                      {isFocused && (
+                        <ChevronDown size={10} color={APPARATUS_COLORS[app]} strokeWidth={3} />
+                      )}
                     </div>
-                    <span style={{ fontSize: 7, fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.01em' }}>
-                      {APPARATUS_NAMES[app].slice(0, 3)}
-                    </span>
-                  </div>
-                </th>
-              ))}
-              {!focusApparatus && (
-                <th style={{ padding: '8px 4px', textAlign: 'right' }}>
-                  <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--gs-muted)', textTransform: 'uppercase' }}>Tot.</span>
-                </th>
-              )}
+                  </th>
+                )
+              })}
+              <th className="col-total-hide" style={{ padding: '8px 4px', textAlign: 'right' }}>
+                <span style={{ fontSize: 9, fontWeight: 700, color: focusApparatus ? '#CBD5E1' : 'var(--gs-muted)', textTransform: 'uppercase' }}>Tot.</span>
+              </th>
               <th style={{ padding: '8px 0' }}></th>
             </tr>
           </thead>
           <tbody>
             {displayEntries.map((entry) => {
               const isFav = isFavorite(entry.gymnastName)
+              const isFocused = !!focusGymnast && entry.gymnastName === focusGymnast
               return (
                 <tr
                   key={entry.inscriptionId}
-                  style={{ borderBottom: '1px solid var(--gs-border)' }}
+                  ref={isFocused ? focusRowRef : undefined}
+                  style={{
+                    borderBottom: '1px solid var(--gs-border)',
+                    background: isFocused ? 'rgba(76, 111, 217, 0.08)' : undefined,
+                    boxShadow: isFocused ? 'inset 3px 0 0 var(--gs-primary)' : undefined,
+                    transition: 'background 0.3s',
+                  }}
                   className="ranking-row"
                 >
                   {/* Position */}
-                  <td style={{ padding: '10px 0', textAlign: 'center' }}>
+                  <td style={{ padding: '8px 0', textAlign: 'center' }}>
                     {entry.position <= 3 ? (
                       <div style={{
-                        width: 20, height: 20, borderRadius: '50%',
+                        width: 18, height: 18, borderRadius: '50%',
                         background: entry.position === 1 ? '#FFD700' : entry.position === 2 ? '#C0C0C0' : '#CD7F32',
                         display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto',
                         boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                       }}>
-                        <Trophy size={10} color="#fff" />
+                        <Trophy size={9} color="#fff" />
                       </div>
                     ) : (
-                      <span style={{ fontSize: 12, fontWeight: 700, color: '#94A3B8' }}>{entry.position}</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: '#94A3B8' }}>{entry.position}</span>
                     )}
                   </td>
 
-                  {/* Gymnast + club */}
-                  <td style={{ padding: '10px 4px', overflow: 'hidden' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  {/* Gymnast + club + total (mobile inline) */}
+                  <td style={{ padding: '8px 2px', overflow: 'hidden' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                       <button
                         onClick={() => toggleFavorite(entry.gymnastName)}
                         style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: isFav ? '#FFD700' : '#E2E8F0', flexShrink: 0 }}
                       >
-                        <Star size={16} fill={isFav ? 'currentColor' : 'none'} />
+                        <Star size={13} fill={isFav ? 'currentColor' : 'none'} />
                       </button>
                       <div style={{ minWidth: 0 }}>
                         <Link
                           href={`/gimnastas/${encodeURIComponent(entry.gymnastName)}`}
-                          style={{ 
-                            fontWeight: 800, 
-                            color: 'var(--gs-text)', 
-                            fontSize: 12, 
-                            letterSpacing: '-0.02em', 
-                            lineHeight: 1,
+                          style={{
+                            fontWeight: 800,
+                            color: 'var(--gs-text)',
+                            fontSize: 11,
+                            letterSpacing: '-0.02em',
+                            lineHeight: 1.1,
                             display: 'block',
                             whiteSpace: 'nowrap',
                             overflow: 'hidden',
@@ -213,49 +211,100 @@ export function RankingsTable({ entries, gender }: RankingsTableProps) {
                         >
                           {entry.gymnastName}
                         </Link>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginTop: 1 }}>
-                          {entry.clubFlag && <img src={entry.clubFlag} alt="" style={{ height: 9, borderRadius: 1 }} />}
-                          <span style={{ 
-                            fontSize: 9, 
-                            color: 'var(--gs-muted)', 
-                            fontWeight: 500,
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            display: 'block'
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            {entry.clubFlag && <img src={entry.clubFlag} alt="" style={{ height: 8, borderRadius: 1 }} />}
+                            <span style={{
+                              fontSize: 8,
+                              color: 'var(--gs-muted)',
+                              fontWeight: 500,
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              display: 'block'
+                            }}>
+                              {entry.clubName}
+                            </span>
+                          </div>
+                          {/* Total score inline on mobile */}
+                          <span className="total-inline-mobile" style={{
+                            fontSize: 9,
+                            fontWeight: 900,
+                            color: focusApparatus ? '#CBD5E1' : '#334155',
+                            fontVariantNumeric: 'tabular-nums',
+                            letterSpacing: '-0.02em',
+                            flexShrink: 0,
                           }}>
-                            {entry.clubName}
+                            {entry.totalScore.toFixed(1)}
                           </span>
                         </div>
                       </div>
                     </div>
                   </td>
 
-                  {/* Apparatus scores */}
-                  {visibleApparatus.map(app => {
+                  {/* Apparatus scores — all columns always visible */}
+                  {baseApparatus.map(app => {
+                    const isFocused = focusApparatus === app
+                    const isAnyFocused = focusApparatus !== null
                     const score = entry[`${app}Score` as keyof RankingEntry] as number
+                    const dScore = entry[`${app}DScore` as keyof RankingEntry] as number ?? 0
+                    const eScore = entry[`${app}EScore` as keyof RankingEntry] as number ?? 0
+                    const activeColor = APPARATUS_COLORS[app]
+                    const dimmed = isAnyFocused && !isFocused
+                    // Penalización = total - D - E (solo si hay D o E registrados)
+                    const hasBreakdown = dScore > 0 || eScore > 0
+                    const penalty = hasBreakdown
+                      ? Math.round((score - dScore - eScore) * 1000) / 1000
+                      : 0
+                    const showPenalty = penalty < -0.001
                     return (
                       <td key={app} style={{ padding: '10px 2px', textAlign: 'center' }}>
-                        <span style={{
-                          fontSize: 12, fontWeight: 700,
-                          color: score > 0 ? APPARATUS_COLORS[app] : '#CBD5E1',
-                          fontVariantNumeric: 'tabular-nums',
-                          letterSpacing: '-0.03em'
-                        }}>
-                          {score > 0 ? score.toFixed(1) : '—'} 
-                        </span>
+                        <ScoreBreakdown
+                          dScore={dScore}
+                          eScore={eScore}
+                          totalScore={score}
+                          color={activeColor}
+                        >
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1.1 }}>
+                            <span className="score-cell" style={{
+                              fontSize: isFocused ? 13 : 12,
+                              fontWeight: isFocused ? 900 : 700,
+                              color: dimmed ? '#CBD5E1' : (score > 0 ? activeColor : '#CBD5E1'),
+                              fontVariantNumeric: 'tabular-nums',
+                              letterSpacing: '-0.03em',
+                              transition: 'color 0.15s',
+                            }}>
+                              {score > 0 ? score.toFixed(3) : '—'}
+                            </span>
+                            {showPenalty && (
+                              <span style={{
+                                fontSize: 9,
+                                fontWeight: 700,
+                                color: dimmed ? '#CBD5E1' : '#EF4444',
+                                fontVariantNumeric: 'tabular-nums',
+                                letterSpacing: '-0.02em',
+                                marginTop: 1,
+                              }} title="Penalización">
+                                {penalty.toFixed(2)}
+                              </span>
+                            )}
+                          </div>
+                        </ScoreBreakdown>
                       </td>
                     )
                   })}
 
-                  {/* Total */}
-                  {!focusApparatus && (
-                    <td style={{ padding: '10px 4px', textAlign: 'right' }}>
-                      <span style={{ fontSize: 13, fontWeight: 900, color: 'var(--gs-text)', letterSpacing: '-0.03em', fontVariantNumeric: 'tabular-nums' }}>
-                        {entry.totalScore.toFixed(1)}
-                      </span>
-                    </td>
-                  )}
+                  {/* Total — hidden on mobile (shown inline in gymnast cell) */}
+                  <td className="col-total-hide" style={{ padding: '10px 4px', textAlign: 'right' }}>
+                    <span style={{
+                      fontSize: 13, fontWeight: 900,
+                      color: focusApparatus ? '#CBD5E1' : 'var(--gs-text)',
+                      letterSpacing: '-0.03em', fontVariantNumeric: 'tabular-nums',
+                      transition: 'color 0.15s',
+                    }}>
+                      {entry.totalScore.toFixed(1)}
+                    </span>
+                  </td>
 
                   {/* Share */}
                   <td style={{ padding: '10px 0', textAlign: 'center' }}>

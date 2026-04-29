@@ -305,64 +305,56 @@
   .ranking-col-apparatus { width: 54px; }
   .ranking-col-total { width: 68px; }
   .ranking-col-share { width: 44px; }
+  .total-inline-mobile { display: none; }
+
+  .ranking-page-container { padding: 24px 16px; }
+
+  /* La card que contiene la tabla NO debe tener transform en hover —
+     rompe el position:fixed del popover de desglose */
+  .ranking-page-card,
+  .ranking-page-card:hover {
+    transform: none !important;
+  }
+
+  /* Notas con desglose D/E disponible — sin subrayado, solo cursor pointer */
+  .score-breakdown-trigger {
+    transition: opacity 0.15s;
+  }
+  .score-breakdown-trigger:hover {
+    opacity: 0.7;
+  }
+  @media (max-width: 640px) {
+    .ranking-page-container { padding: 12px 4px !important; }
+    .ranking-page-card { border-radius: 8px !important; }
+  }
 
   @media (max-width: 640px) {
-    .ranking-col-pos { width: 36px; }
-    .ranking-col-gymnast { width: 130px; min-width: 130px; }
-    .ranking-col-apparatus { width: 46px; }
-    .ranking-col-total { width: 56px; }
-    .ranking-col-share { width: 40px; }
-    
+    .ranking-col-pos { width: 24px; }
+    .ranking-col-gymnast { width: 96px; min-width: 96px; }
+    .ranking-col-apparatus { width: 50px; }
+    .ranking-col-total { display: none; }
+    .ranking-col-share { width: 24px; }
+    .ranking-table-main th.col-total-hide,
+    .ranking-table-main td.col-total-hide { display: none; }
+    .total-inline-mobile { display: inline !important; }
+
+    /* Compact score font on mobile */
+    .ranking-table-main td .score-cell {
+      font-size: 11px !important;
+      letter-spacing: -0.04em;
+    }
+
+    /* Full-width on mobile, no overflow scroll */
     .ranking-table {
-      table-layout: auto;
-      min-width: max-content;
+      table-layout: fixed;
+      width: 100%;
+      min-width: 0;
+    }
+    .ranking-table-container {
+      overflow-x: hidden;
     }
 
-    /* Sticky columns for mobile — position + gymnast name stay fixed */
-    /* IMPORTANT: iOS Safari needs explicit backgrounds, NOT "inherit" */
-    .ranking-table-main th:nth-child(1),
-    .ranking-table-main td:nth-child(1) {
-      position: -webkit-sticky;
-      position: sticky;
-      left: 0;
-      z-index: 10;
-      background: #ffffff !important;
-    }
-    
-    .ranking-table-main th:nth-child(2),
-    .ranking-table-main td:nth-child(2) {
-      position: -webkit-sticky;
-      position: sticky;
-      left: 36px; /* Matches width of col-pos */
-      z-index: 10;
-      background: #ffffff !important;
-    }
-
-    /* Header row gets the BG color to match */
-    .ranking-table-main th:nth-child(1),
-    .ranking-table-main th:nth-child(2) {
-      background: var(--gs-bg) !important;
-      z-index: 11;
-    }
-
-    /* Row hover: sticky cells must also pick up the hover bg */
-    .ranking-row:hover td:nth-child(1),
-    .ranking-row:hover td:nth-child(2) {
-      background: #F8FAFC !important;
-    }
-
-    /* Shadow separator between fixed name and scrollable scores */
-    .ranking-table-main th:nth-child(2)::after,
-    .ranking-table-main td:nth-child(2)::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      right: -6px;
-      bottom: 0;
-      width: 6px;
-      background: linear-gradient(to right, rgba(0,0,0,0.06), transparent);
-      pointer-events: none;
-    }
+    /* Mobile: no sticky needed since table fits viewport */
 
     .gs-container {
       padding: 0 8px; /* Less horizontal padding on mobile */
