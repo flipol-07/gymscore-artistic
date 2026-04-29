@@ -79,6 +79,16 @@
     transform: translateY(-2px);
   }
 
+  /* Card del historial del gimnasta */
+  .history-card {
+    padding: 18px 20px;
+  }
+  @media (max-width: 640px) {
+    .history-card {
+      padding: 14px;
+    }
+  }
+
   /* Buttons */
   .gs-btn-primary {
     background: var(--gs-primary);
