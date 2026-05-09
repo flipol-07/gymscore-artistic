@@ -2,124 +2,113 @@
 
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { hasValidEventSession } from '@/lib/auth/event-session'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { parseProgramFromBase64 } from '../services/program-parser'
 
-export async function processProgramAction(competitionId: string, base64Pdf: string, password?: string) {
+async function authorize(competitionId: string): Promise<boolean> {
+  if (await hasValidEventSession(competitionId)) return true
   const cookieStore = await cookies()
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
+        getAll() { return cookieStore.getAll() },
+        setAll(cookiesToSet: { name: string; value: string; options: any }[]) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options),
+            )
+          } catch { /* noop */ }
         },
       },
-    }
+    },
   )
-
-  // 1. Check permissions: Supabase superadmin OR valid event password
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    // Try event password validation
-    if (!password) throw new Error('Unauthorized')
-    const { data: match, error: pwErr } = await supabase.rpc('verify_competition_password', {
-      p_competition_id: competitionId,
-      p_password: password
-    })
-    if (pwErr || !match) throw new Error('Unauthorized')
-  }
+  if (!user) return false
+  const { data: prof } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  if (prof?.role === 'superadmin') return true
+  const { count } = await supabase
+    .from('competition_admins')
+    .select('id', { count: 'exact', head: true })
+    .eq('profile_id', user.id)
+    .eq('competition_id', competitionId)
+  return (count ?? 0) > 0
+}
 
-  // 2. Parse with AI
-  console.log('[AI] Iniciando análisis del programa...')
+export async function processProgramAction(competitionId: string, base64Pdf: string) {
+  if (!(await authorize(competitionId))) throw new Error('Unauthorized')
+
+  console.log('[AI] Iniciando analisis del programa...')
   const parsed = await parseProgramFromBase64(base64Pdf)
-  console.log(`[AI] Análisis completado: ${parsed.sessions.length} jornadas encontradas.`)
+  console.log(`[AI] Analisis completado: ${parsed.sessions.length} jornadas encontradas.`)
 
-  // 3. Populate Database
+  const supabase = createAdminClient()
+
   for (const session of parsed.sessions) {
-    console.log(`[DB] Procesando jornada: ${session.name}`)
     const { data: sessData, error: sessErr } = await supabase
       .from('sessions')
-      .upsert({
-        competition_id: competitionId,
-        name: session.name,
-        ord: session.order
-      }, { onConflict: 'competition_id,name' })
+      .upsert(
+        { competition_id: competitionId, name: session.name, ord: session.order },
+        { onConflict: 'competition_id,name' },
+      )
       .select()
       .single()
-
-    if (sessErr) {
-      console.error('[DB] Error insertando jornada:', sessErr.message)
+    if (sessErr || !sessData) {
+      console.error('[DB] Error insertando jornada:', sessErr?.message)
       continue
     }
 
     for (const promo of session.promotions) {
-      console.log(`[DB]   Procesando promoción: ${promo.name}`)
       const { data: promoData, error: promoErr } = await supabase
         .from('promotions')
-        .upsert({
-          session_id: sessData.id,
-          competition_id: competitionId,
-          name: promo.name,
-          gender: promo.gender,
-          gymnast_count: promo.gymnasts.length,
-          status: 'pending'
-        }, { onConflict: 'session_id,name' })
+        .upsert(
+          {
+            session_id: sessData.id,
+            competition_id: competitionId,
+            name: promo.name,
+            gender: promo.gender,
+            gymnast_count: promo.gymnasts.length,
+            status: 'pending',
+          },
+          { onConflict: 'session_id,name' },
+        )
         .select()
         .single()
-
-      if (promoErr) {
-        console.error('[DB]   Error insertando promoción:', promoErr.message)
-        continue
-      }
+      if (promoErr || !promoData) continue
 
       for (const gymnast of promo.gymnasts) {
-        // Create/Find Club
-        let clubId: string = ''
-        const clubNameTrimmed = gymnast.clubName.trim()
-        
+        const clubName = gymnast.clubName.trim()
         const { data: clubData, error: clubErr } = await supabase
           .from('clubs')
-          .upsert({ name: clubNameTrimmed }, { onConflict: 'name' })
+          .upsert({ name: clubName }, { onConflict: 'name' })
           .select()
           .single()
+        if (clubErr || !clubData) continue
 
-        if (clubErr) {
-          console.error(`[DB]     Error con club ${clubNameTrimmed}:`, clubErr.message)
-          continue
-        }
-        clubId = clubData.id
-
-        // Create/Find Gymnast
         const { data: gymData, error: gymErr } = await supabase
           .from('gymnasts')
-          .upsert({
-            full_name: gymnast.fullName.trim(),
-            club_id: clubId
-          }, { onConflict: 'full_name,club_id' })
+          .upsert(
+            { full_name: gymnast.fullName.trim(), club_id: clubData.id },
+            { onConflict: 'full_name,club_id' },
+          )
           .select()
           .single()
+        if (gymErr || !gymData) continue
 
-        if (gymErr) {
-          console.error(`[DB]     Error con gimnasta ${gymnast.fullName}:`, gymErr.message)
-          continue
-        }
-
-        // Create Inscription
-        const { error: insErr } = await supabase.from('inscriptions').insert({
-          gymnast_id: gymData.id,
-          promotion_id: promoData.id,
-          club_id: clubId
-        })
-
-        // If inscription already exists (duplicate insert), we can ignore it
+        const { error: insErr } = await supabase
+          .from('inscriptions')
+          .insert({
+            gymnast_id: gymData.id,
+            promotion_id: promoData.id,
+            club_id: clubData.id,
+          })
         if (insErr && !insErr.message.includes('duplicate key')) {
-          console.error(`[DB]     Error inscripción ${gymnast.fullName}:`, insErr.message)
+          console.error('[DB] Error inscripcion:', insErr.message)
         }
       }
     }
   }
-
-  console.log('[OK] Procesamiento del programa finalizado con éxito.')
   return { success: true }
 }

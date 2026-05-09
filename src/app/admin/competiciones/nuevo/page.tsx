@@ -4,12 +4,12 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Navbar } from '@/shared/components/navbar'
 import { createClient } from '@/lib/supabase/client'
-import * as service from '@/features/competitions/services/competition-service'
+import { createCompetitionAction } from '@/features/competitions/actions/admin-mutations'
 
 export default function CreateCompetitionPage() {
   const router = useRouter()
   const supabase = createClient()
-  
+
   const [name, setName] = useState('')
   const [location, setLocation] = useState('')
   const [date, setDate] = useState('')
@@ -36,11 +36,11 @@ export default function CreateCompetitionPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    const { success, data, error } = await service.createCompetition(name, location, date)
-    if (success && data) {
-      router.push(`/admin/competiciones/${data.slug}`)
+    const result = await createCompetitionAction({ name, location, date })
+    if (result.ok) {
+      router.push(`/admin/competiciones/${result.slug}`)
     } else {
-      alert('Error: ' + error?.message)
+      alert('Error: ' + result.error)
       setLoading(false)
     }
   }
@@ -56,47 +56,18 @@ export default function CreateCompetitionPage() {
             <h1 style={{ fontSize: 24, fontWeight: 900, marginBottom: 24 }}>Nuevo Evento</h1>
             <form onSubmit={handleSubmit}>
               <div style={{ marginBottom: 20 }}>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 8, color: 'var(--gs-muted)' }}>
-                  NOMBRE DEL EVENTO
-                </label>
-                <input 
-                  className="gs-input" 
-                  value={name} 
-                  onChange={e => setName(e.target.value)} 
-                  required 
-                  placeholder="Ej: Copa de Invierno de Gimnasia"
-                />
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 8, color: 'var(--gs-muted)' }}>NOMBRE DEL EVENTO</label>
+                <input className="gs-input" value={name} onChange={e => setName(e.target.value)} required placeholder="Ej: Copa de Invierno de Gimnasia" />
               </div>
               <div style={{ marginBottom: 20 }}>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 8, color: 'var(--gs-muted)' }}>
-                  UBICACIÓN
-                </label>
-                <input 
-                  className="gs-input" 
-                  value={location} 
-                  onChange={e => setLocation(e.target.value)} 
-                  required 
-                  placeholder="Almería, Pabellón Central"
-                />
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 8, color: 'var(--gs-muted)' }}>UBICACIÓN</label>
+                <input className="gs-input" value={location} onChange={e => setLocation(e.target.value)} required placeholder="Almería, Pabellón Central" />
               </div>
               <div style={{ marginBottom: 32 }}>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 8, color: 'var(--gs-muted)' }}>
-                  FECHA
-                </label>
-                <input 
-                  type="date"
-                  className="gs-input" 
-                  value={date} 
-                  onChange={e => setDate(e.target.value)} 
-                  required 
-                />
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 8, color: 'var(--gs-muted)' }}>FECHA</label>
+                <input type="date" className="gs-input" value={date} onChange={e => setDate(e.target.value)} required />
               </div>
-              <button 
-                type="submit" 
-                className="gs-btn-primary" 
-                style={{ width: '100%', justifyContent: 'center', height: 48 }}
-                disabled={loading}
-              >
+              <button type="submit" className="gs-btn-primary" style={{ width: '100%', justifyContent: 'center', height: 48 }} disabled={loading}>
                 {loading ? 'Creando...' : 'Crear Competición'}
               </button>
             </form>

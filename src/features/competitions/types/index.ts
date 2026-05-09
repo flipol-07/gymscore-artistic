@@ -66,7 +66,6 @@ export interface Competition {
   programUrl?: string
   categoryCount?: number
   isPublished?: boolean
-  adminPassword?: string
 }
 
 export interface Category {

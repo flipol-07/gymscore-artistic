@@ -2,15 +2,17 @@ import { createClient } from '@/lib/supabase/client'
 import type { Competition, CompetitionSession, Promotion, RankingEntry, GymnastHistory } from '../types'
 import { Apparatus } from '../types'
 
+// Lee siempre desde la VIEW segura `competitions_public` (sin admin_password).
+// Las mutaciones se hacen via Server Actions, no desde el cliente.
+const PUBLIC_COMPETITION_COLUMNS =
+  'id, name, slug, location, date, status, program_url, is_published, created_at'
+
 export async function getCompetitions(onlyPublished = false): Promise<Competition[]> {
   const supabase = createClient()
   let query = supabase
-    .from('competitions')
-    .select(`
-      *,
-      promotions (count)
-    `)
-    
+    .from('competitions_public')
+    .select(`${PUBLIC_COMPETITION_COLUMNS}, promotions:promotions(count)`)
+
   if (onlyPublished) {
     query = query.eq('is_published', true)
   }
@@ -28,22 +30,18 @@ export async function getCompetitions(onlyPublished = false): Promise<Competitio
     slug: c.slug,
     location: c.location,
     date: c.date,
-    status: c.status as any,
+    status: c.status as Competition['status'],
     isPublished: c.is_published,
-    adminPassword: c.admin_password,
-    programUrl: c.program_url,
-    categoryCount: c.promotions[0]?.count || 0
+    programUrl: c.program_url ?? undefined,
+    categoryCount: c.promotions?.[0]?.count || 0,
   }))
 }
 
 export async function getCompetitionBySlug(slug: string): Promise<Competition | null> {
   const supabase = createClient()
   const { data, error } = await supabase
-    .from('competitions')
-    .select(`
-      *,
-      promotions (count)
-    `)
+    .from('competitions_public')
+    .select(`${PUBLIC_COMPETITION_COLUMNS}, promotions:promotions(count)`)
     .eq('slug', slug)
     .single()
 
@@ -55,11 +53,10 @@ export async function getCompetitionBySlug(slug: string): Promise<Competition | 
     slug: data.slug,
     location: data.location,
     date: data.date,
-    status: data.status as any,
+    status: data.status as Competition['status'],
     isPublished: data.is_published,
-    adminPassword: data.admin_password,
-    programUrl: data.program_url,
-    categoryCount: data.promotions[0]?.count || 0
+    programUrl: data.program_url ?? undefined,
+    categoryCount: data.promotions?.[0]?.count || 0,
   }
 }
 
@@ -78,7 +75,7 @@ export async function getSessions(competitionId: string): Promise<CompetitionSes
     name: s.name,
     date: s.date,
     location: s.location,
-    order: s.ord
+    order: s.ord,
   }))
 }
 
@@ -99,7 +96,7 @@ export async function getPromotions(sessionId: string): Promise<Promotion[]> {
     name: p.name,
     gender: p.gender as any,
     gymnast_count: p.gymnast_count,
-    status: p.status as any
+    status: p.status as any,
   }))
 }
 
@@ -120,7 +117,7 @@ export async function getPromotionById(id: string): Promise<Promotion | null> {
     name: data.name,
     gender: data.gender as any,
     gymnast_count: data.gymnast_count,
-    status: data.status as any
+    status: data.status as any,
   }
 }
 
@@ -180,7 +177,7 @@ export async function getRankings(promotionId: string): Promise<RankingEntry[]> 
       ringsScore: rings, ringsDScore: getD('rings'), ringsEScore: getE('rings'),
       p_barsScore: p_bars, p_barsDScore: getD('p_bars'), p_barsEScore: getE('p_bars'),
       h_barScore: h_bar, h_barDScore: getD('h_bar'), h_barEScore: getE('h_bar'),
-      totalScore: total
+      totalScore: total,
     }
   })
 
@@ -239,11 +236,10 @@ export async function getInscriptionsByIds(ids: string[]): Promise<RankingEntry[
       h_barScore: h_bar, h_barDScore: getD('h_bar'), h_barEScore: getE('h_bar'),
       totalScore: total,
       competitionSlug: (ins.promotions as any)?.competitions?.slug,
-      categoryId: (ins.promotions as any)?.id
+      categoryId: (ins.promotions as any)?.id,
     }
   })
 }
-
 
 export async function getGymnastRealHistory(gymnastName: string): Promise<GymnastHistory[]> {
   const supabase = createClient()
@@ -261,11 +257,13 @@ export async function getGymnastRealHistory(gymnastName: string): Promise<Gymnas
         competitions!inner(
           name,
           slug,
-          date
+          date,
+          is_published
         )
       )
     `)
     .eq('gymnasts.full_name', gymnastName)
+    .eq('promotions.competitions.is_published', true)
 
   if (error || !data) {
     if (error) console.error('Error fetching gymnast history:', error)
@@ -275,7 +273,7 @@ export async function getGymnastRealHistory(gymnastName: string): Promise<Gymnas
   return data.map((ins: any) => {
     const scores = ins.scores || []
     const getS = (app: string) => parseFloat(scores.find((s: any) => s.apparatus === app)?.score || 0)
-    
+
     const vault = getS('vault')
     const bars = getS('bars')
     const beam = getS('beam')
@@ -284,7 +282,7 @@ export async function getGymnastRealHistory(gymnastName: string): Promise<Gymnas
     const rings = getS('rings')
     const p_bars = getS('p_bars')
     const h_bar = getS('h_bar')
-    
+
     return {
       competitionName: ins.promotions?.competitions?.name || 'Desconocida',
       competitionSlug: ins.promotions?.competitions?.slug || '',
@@ -301,146 +299,22 @@ export async function getGymnastRealHistory(gymnastName: string): Promise<Gymnas
       ringsScore: rings,
       p_barsScore: p_bars,
       h_barScore: h_bar,
-      totalScore: vault + bars + beam + floor + pommel + rings + p_bars + h_bar
+      totalScore: vault + bars + beam + floor + pommel + rings + p_bars + h_bar,
     }
   }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 }
 
-export async function updateCompetitionProgramUrl(competitionId: string, url: string) {
-  const supabase = createClient()
-  const { error } = await supabase
-    .from('competitions')
-    .update({ program_url: url })
-    .eq('id', competitionId)
-
-  return { success: !error, error }
-}
-
-export async function uploadProgram(competitionId: string, file: File): Promise<{ url: string | null, error: any }> {
-  const supabase = createClient()
-  const fileExt = file.name.split('.').pop()
-  const fileName = `${competitionId}-${Date.now()}.${fileExt}`
-  const filePath = `${fileName}`
-
-  const { error: uploadError } = await supabase.storage
-    .from('programs')
-    .upload(filePath, file)
-
-  if (uploadError) return { url: null, error: uploadError }
-
-  const { data: { publicUrl } } = supabase.storage
-    .from('programs')
-    .getPublicUrl(filePath)
-
-  return { url: publicUrl, error: null }
-}
-
-export async function updateCompetitionVisibility(competitionId: string, isPublished: boolean) {
-  const supabase = createClient()
-  const { error } = await supabase
-    .from('competitions')
-    .update({ is_published: isPublished })
-    .eq('id', competitionId)
-
-  return { success: !error, error }
-}
-
-export async function updateCompetitionStatus(competitionId: string, status: 'draft' | 'active' | 'finished') {
-  const supabase = createClient()
-  const { error } = await supabase
-    .from('competitions')
-    .update({ status })
-    .eq('id', competitionId)
-
-  return { success: !error, error }
-}
-
-export async function updateScore(
-  inscriptionId: string,
-  apparatus: Apparatus,
-  score: number,
-  dScore: number = 0,
-  eScore: number = 0,
-  password?: string
-) {
-  const supabase = createClient()
-  const { error } = await supabase
-    .rpc('save_score_with_password', {
-      p_inscription_id: inscriptionId,
-      p_apparatus: apparatus,
-      p_score: score,
-      p_d_score: dScore,
-      p_e_score: eScore,
-      p_password: password
-    })
-
-  if (error) console.error('updateScore error:', error)
-  return { success: !error, error }
-}
-
-export async function createCompetition(name: string, location: string, date: string) {
-  const supabase = createClient()
-  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
-  const { data, error } = await supabase
-    .from('competitions')
-    .insert({
-      name,
-      slug,
-      location,
-      date,
-      status: 'draft'
-    })
-    .select()
-    .single()
-
-  return { success: !error, data, error }
-}
-
-export async function getCompetitionByPassword(password: string): Promise<{ id: string, name: string, slug: string } | null> {
-  const supabase = createClient()
-  const { data, error } = await supabase
-    .rpc('get_competition_by_password', { p_password: password })
-  
-  if (error || !data || data.length === 0) {
-    if (error) console.error('Error getting competition by password:', error)
-    return null
-  }
-  return data[0]
-}
-
-export async function verifyEventPassword(competitionId: string, password: string): Promise<boolean> {
-  const supabase = createClient()
-  const { data, error } = await supabase
-    .rpc('verify_competition_password', { 
-      p_competition_id: competitionId, 
-      p_password: password 
-    })
-  
-  if (error) {
-    console.error('Error verifying password:', error)
-    return false
-  }
-  return !!data
-}
-
-export async function updateCompetitionAdminPassword(competitionId: string, password: string) {
-  const supabase = createClient()
-  const { error } = await supabase
-    .from('competitions')
-    .update({ admin_password: password })
-    .eq('id', competitionId)
-
-  return { success: !error, error }
-}
+// =====================================================================
+// Login del evento: ver `features/competitions/actions/auth-event.ts`.
+// El password NUNCA viaja al cliente; la server action emite cookie HttpOnly.
+// =====================================================================
 
 export async function searchGymnasts(query: string) {
   if (!query || query.length < 2) return []
 
   const supabase = createClient()
-  
   const formattedQuery = `%${query}%`
 
-  // 1. Buscar por nombre del gimnasta
   const { data: gymData } = await supabase
     .from('gymnasts')
     .select(`
@@ -452,7 +326,6 @@ export async function searchGymnasts(query: string) {
     .ilike('full_name', formattedQuery)
     .limit(10)
 
-  // 2. Buscar por nombre del club (usando join desde inscriptions)
   const { data: clubData } = await supabase
     .from('inscriptions')
     .select(`
@@ -462,9 +335,8 @@ export async function searchGymnasts(query: string) {
     .ilike('clubs.name', formattedQuery)
     .limit(20)
 
-  const resultsMap = new Map<string, {name: string, club: string}>()
+  const resultsMap = new Map<string, { name: string; club: string }>()
 
-  // Mapear resultados de nombres de gimnastas
   if (gymData) {
     gymData.forEach((g: any) => {
       const name = g.full_name
@@ -473,15 +345,12 @@ export async function searchGymnasts(query: string) {
     })
   }
 
-  // Mapear resultados donde coincide el club
   if (clubData) {
     clubData.forEach((ins: any) => {
       const name = ins.gymnasts?.full_name
       const club = ins.clubs?.name
-      if (name && club) {
-        if (!resultsMap.has(name)) {
-          resultsMap.set(name, { name, club })
-        }
+      if (name && club && !resultsMap.has(name)) {
+        resultsMap.set(name, { name, club })
       }
     })
   }
