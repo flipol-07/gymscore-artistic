@@ -1,0 +1,1 @@
+Un botón para cada cuadrato y uno general.

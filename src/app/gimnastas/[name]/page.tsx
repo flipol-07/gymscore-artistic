@@ -27,14 +27,14 @@ function historyToRankingEntry(item: GymnastHistory, gymnastName: string): Ranki
     totalScore: item.totalScore,
     competitionSlug: item.competitionSlug,
     categoryId: item.categoryId,
-    vaultDScore: 0, vaultEScore: 0,
-    barsDScore: 0, barsEScore: 0,
-    beamDScore: 0, beamEScore: 0,
-    floorDScore: 0, floorEScore: 0,
-    pommelDScore: 0, pommelEScore: 0,
-    ringsDScore: 0, ringsEScore: 0,
-    p_barsDScore: 0, p_barsEScore: 0,
-    h_barDScore: 0, h_barEScore: 0,
+    vaultDScore: 0, vaultEScore: 0, vaultNScore: 0,
+    barsDScore: 0, barsEScore: 0, barsNScore: 0,
+    beamDScore: 0, beamEScore: 0, beamNScore: 0,
+    floorDScore: 0, floorEScore: 0, floorNScore: 0,
+    pommelDScore: 0, pommelEScore: 0, pommelNScore: 0,
+    ringsDScore: 0, ringsEScore: 0, ringsNScore: 0,
+    p_barsDScore: 0, p_barsEScore: 0, p_barsNScore: 0,
+    h_barDScore: 0, h_barEScore: 0, h_barNScore: 0,
   }
 }
 

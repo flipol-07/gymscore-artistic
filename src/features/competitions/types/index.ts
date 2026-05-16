@@ -98,6 +98,7 @@ export interface Score {
   score: number
   dScore: number
   eScore: number
+  nScore: number
 }
 
 export interface RankingEntry {
@@ -117,23 +118,31 @@ export interface RankingEntry {
   totalScore: number
   competitionSlug?: string
   categoryId?: string
-  // Desglose D/E por aparato (0 si no disponible)
+  // Desglose D/E/N por aparato (0 si no disponible)
   vaultDScore: number
   vaultEScore: number
+  vaultNScore: number
   barsDScore: number
   barsEScore: number
+  barsNScore: number
   beamDScore: number
   beamEScore: number
+  beamNScore: number
   floorDScore: number
   floorEScore: number
+  floorNScore: number
   pommelDScore: number
   pommelEScore: number
+  pommelNScore: number
   ringsDScore: number
   ringsEScore: number
+  ringsNScore: number
   p_barsDScore: number
   p_barsEScore: number
+  p_barsNScore: number
   h_barDScore: number
   h_barEScore: number
+  h_barNScore: number
 }
 
 export interface GymnastHistory {

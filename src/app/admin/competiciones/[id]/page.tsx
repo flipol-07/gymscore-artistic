@@ -490,6 +490,20 @@ export default function AdminCompeticionPage() {
                         <div style={{ color: 'var(--gs-primary)', fontSize: 13, fontWeight: 700 }}>
                           {isActive ? 'Cerrar ↑' : 'Gestionar Notas →'}
                         </div>
+                        <a
+                          href={`/competiciones/${competition.slug}/${prom.id}/juez`}
+                          onClick={(e) => e.stopPropagation()}
+                          style={{
+                            display: 'inline-block', marginTop: 6,
+                            fontSize: 11, fontWeight: 700,
+                            padding: '4px 8px', borderRadius: 6,
+                            background: '#7F1D1D', color: '#fff',
+                            textDecoration: 'none',
+                          }}
+                          title="Panel del Juez (form rápido con validaciones)"
+                        >
+                          ⚖️ Panel del Juez
+                        </a>
                       </div>
                     </div>
                   </div>

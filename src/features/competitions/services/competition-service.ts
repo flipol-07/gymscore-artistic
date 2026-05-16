@@ -20,9 +20,15 @@ export async function getCompetitions(onlyPublished = false): Promise<Competitio
   const { data, error } = await query.order('date', { ascending: false })
 
   if (error) {
-    console.error('Error fetching competitions:', error)
+    console.error('Error fetching competitions:', {
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code,
+    })
     return []
   }
+  if (!data) return []
 
   return data.map((c: any) => ({
     id: c.id,
@@ -129,7 +135,7 @@ export async function getRankings(promotionId: string): Promise<RankingEntry[]> 
       id,
       gymnasts (full_name),
       clubs (name, flag_url),
-      scores (apparatus, score, d_score, e_score)
+      scores (apparatus, score, d_score, e_score, n_score)
     `)
     .eq('promotion_id', promotionId)
 
@@ -153,6 +159,10 @@ export async function getRankings(promotionId: string): Promise<RankingEntry[]> 
       const val = scores.find((s: any) => s.apparatus === app)?.e_score
       return val != null ? parseFloat(val) : 0
     }
+    const getN = (app: string) => {
+      const val = scores.find((s: any) => s.apparatus === app)?.n_score
+      return val != null ? parseFloat(val) : 0
+    }
     const vault = getScore('vault')
     const bars = getScore('bars')
     const beam = getScore('beam')
@@ -169,14 +179,14 @@ export async function getRankings(promotionId: string): Promise<RankingEntry[]> 
       gymnastName: ins.gymnasts?.full_name ?? 'Desconocida',
       clubName: ins.clubs?.name ?? 'Club desconocido',
       clubFlag: ins.clubs?.flag_url ?? undefined,
-      vaultScore: vault, barsDScore: getD('bars'), barsEScore: getE('bars'),
-      barsScore: bars, vaultDScore: getD('vault'), vaultEScore: getE('vault'),
-      beamScore: beam, beamDScore: getD('beam'), beamEScore: getE('beam'),
-      floorScore: floor, floorDScore: getD('floor'), floorEScore: getE('floor'),
-      pommelScore: pommel, pommelDScore: getD('pommel'), pommelEScore: getE('pommel'),
-      ringsScore: rings, ringsDScore: getD('rings'), ringsEScore: getE('rings'),
-      p_barsScore: p_bars, p_barsDScore: getD('p_bars'), p_barsEScore: getE('p_bars'),
-      h_barScore: h_bar, h_barDScore: getD('h_bar'), h_barEScore: getE('h_bar'),
+      vaultScore: vault, vaultDScore: getD('vault'), vaultEScore: getE('vault'), vaultNScore: getN('vault'),
+      barsScore: bars, barsDScore: getD('bars'), barsEScore: getE('bars'), barsNScore: getN('bars'),
+      beamScore: beam, beamDScore: getD('beam'), beamEScore: getE('beam'), beamNScore: getN('beam'),
+      floorScore: floor, floorDScore: getD('floor'), floorEScore: getE('floor'), floorNScore: getN('floor'),
+      pommelScore: pommel, pommelDScore: getD('pommel'), pommelEScore: getE('pommel'), pommelNScore: getN('pommel'),
+      ringsScore: rings, ringsDScore: getD('rings'), ringsEScore: getE('rings'), ringsNScore: getN('rings'),
+      p_barsScore: p_bars, p_barsDScore: getD('p_bars'), p_barsEScore: getE('p_bars'), p_barsNScore: getN('p_bars'),
+      h_barScore: h_bar, h_barDScore: getD('h_bar'), h_barEScore: getE('h_bar'), h_barNScore: getN('h_bar'),
       totalScore: total,
     }
   })
@@ -195,7 +205,7 @@ export async function getInscriptionsByIds(ids: string[]): Promise<RankingEntry[
       id,
       gymnasts (full_name),
       clubs (name, flag_url),
-      scores (apparatus, score, d_score, e_score),
+      scores (apparatus, score, d_score, e_score, n_score),
       promotions (
         id,
         competitions (slug)
@@ -210,6 +220,7 @@ export async function getInscriptionsByIds(ids: string[]): Promise<RankingEntry[
     const getScore = (app: string) => parseFloat(scores.find((s: any) => s.apparatus === app)?.score || 0)
     const getD = (app: string) => parseFloat(scores.find((s: any) => s.apparatus === app)?.d_score || 0)
     const getE = (app: string) => parseFloat(scores.find((s: any) => s.apparatus === app)?.e_score || 0)
+    const getN = (app: string) => parseFloat(scores.find((s: any) => s.apparatus === app)?.n_score || 0)
     const vault = getScore('vault')
     const bars = getScore('bars')
     const beam = getScore('beam')
@@ -226,14 +237,14 @@ export async function getInscriptionsByIds(ids: string[]): Promise<RankingEntry[
       gymnastName: ins.gymnasts.full_name,
       clubName: ins.clubs.name,
       clubFlag: ins.clubs.flag_url,
-      vaultScore: vault, vaultDScore: getD('vault'), vaultEScore: getE('vault'),
-      barsScore: bars, barsDScore: getD('bars'), barsEScore: getE('bars'),
-      beamScore: beam, beamDScore: getD('beam'), beamEScore: getE('beam'),
-      floorScore: floor, floorDScore: getD('floor'), floorEScore: getE('floor'),
-      pommelScore: pommel, pommelDScore: getD('pommel'), pommelEScore: getE('pommel'),
-      ringsScore: rings, ringsDScore: getD('rings'), ringsEScore: getE('rings'),
-      p_barsScore: p_bars, p_barsDScore: getD('p_bars'), p_barsEScore: getE('p_bars'),
-      h_barScore: h_bar, h_barDScore: getD('h_bar'), h_barEScore: getE('h_bar'),
+      vaultScore: vault, vaultDScore: getD('vault'), vaultEScore: getE('vault'), vaultNScore: getN('vault'),
+      barsScore: bars, barsDScore: getD('bars'), barsEScore: getE('bars'), barsNScore: getN('bars'),
+      beamScore: beam, beamDScore: getD('beam'), beamEScore: getE('beam'), beamNScore: getN('beam'),
+      floorScore: floor, floorDScore: getD('floor'), floorEScore: getE('floor'), floorNScore: getN('floor'),
+      pommelScore: pommel, pommelDScore: getD('pommel'), pommelEScore: getE('pommel'), pommelNScore: getN('pommel'),
+      ringsScore: rings, ringsDScore: getD('rings'), ringsEScore: getE('rings'), ringsNScore: getN('rings'),
+      p_barsScore: p_bars, p_barsDScore: getD('p_bars'), p_barsEScore: getE('p_bars'), p_barsNScore: getN('p_bars'),
+      h_barScore: h_bar, h_barDScore: getD('h_bar'), h_barEScore: getE('h_bar'), h_barNScore: getN('h_bar'),
       totalScore: total,
       competitionSlug: (ins.promotions as any)?.competitions?.slug,
       categoryId: (ins.promotions as any)?.id,

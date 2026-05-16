@@ -5,21 +5,25 @@ import { useEffect, useRef, useState } from 'react'
 interface ScoreBreakdownProps {
   dScore: number
   eScore: number
+  /** Deducción Neutral. Si no se pasa, se infiere a partir del total. */
+  nScore?: number
   totalScore: number
   color: string
   children: React.ReactNode
 }
 
-export function ScoreBreakdown({ dScore, eScore, totalScore, color, children }: ScoreBreakdownProps) {
-  const hasDesglose = dScore > 0 || eScore > 0
+export function ScoreBreakdown({ dScore, eScore, nScore, totalScore, color, children }: ScoreBreakdownProps) {
+  const hasDesglose = dScore > 0 || eScore > 0 || (nScore ?? 0) > 0
   const [visible, setVisible] = useState(false)
   const [pos, setPos] = useState({ top: 0, left: 0 })
   const ref = useRef<HTMLButtonElement>(null)
   const popoverRef = useRef<HTMLDivElement>(null)
   const justOpenedRef = useRef(false)
 
-  const nd = hasDesglose ? Math.round((totalScore - dScore - eScore) * 1000) / 1000 : 0
-  const showND = Math.abs(nd) > 0.001
+  // Si no recibimos nScore explícito (legacy), lo derivamos: total = 10 + D - E - N → N = 10 + D - E - total
+  // Solo lo mostramos si nScore fue suministrado explícitamente o si hay D/E que justifiquen un desglose.
+  const finalN = nScore != null ? Math.max(0, nScore) : 0
+  const showN = finalN > 0.001
 
   function computePosition() {
     if (!ref.current) return
@@ -136,16 +140,30 @@ export function ScoreBreakdown({ dScore, eScore, totalScore, color, children }: 
             borderRight: '5px solid transparent',
             borderBottom: '6px solid #ffffff',
           }} />
-          <div style={{ display: 'flex', gap: 12, alignItems: 'stretch' }}>
-            <ScorePill label="D" value={dScore} color="var(--gs-primary)" />
-            <span style={{ width: 1, background: 'var(--gs-border)' }} />
-            <ScorePill label="E" value={eScore} color="var(--gs-success)" />
-            {showND && (
-              <>
-                <span style={{ width: 1, background: 'var(--gs-border)' }} />
-                <ScorePill label="Pen" value={nd} color="var(--gs-live)" />
-              </>
-            )}
+          {/* Layout: General arriba (grande), debajo Dificultad. Tras click expandido: E + Neutral. */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: 6, minWidth: 160 }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 9, fontWeight: 800, color: 'var(--gs-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>
+                Nota General
+              </div>
+              <div style={{ fontSize: 22, fontWeight: 900, color, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.04em', lineHeight: 1 }}>
+                {totalScore.toFixed(3)}
+              </div>
+            </div>
+
+            <div style={{ height: 1, background: 'var(--gs-border)' }} />
+
+            <div style={{ display: 'flex', justifyContent: 'space-around', gap: 8 }}>
+              <ScorePill label="Dificultad" value={dScore} color="var(--gs-primary)" />
+              <span style={{ width: 1, background: 'var(--gs-border)' }} />
+              <ScorePill label="Ejecución" value={eScore} color="var(--gs-success)" />
+              {showN && (
+                <>
+                  <span style={{ width: 1, background: 'var(--gs-border)' }} />
+                  <ScorePill label="Neutral" value={finalN} color="var(--gs-live)" />
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -155,10 +173,10 @@ export function ScoreBreakdown({ dScore, eScore, totalScore, color, children }: 
 
 function ScorePill({ label, value, color }: { label: string; value: number; color: string }) {
   return (
-    <div style={{ textAlign: 'center', minWidth: 44, padding: '0 2px' }}>
-      <div style={{ fontSize: 9, fontWeight: 800, color: 'var(--gs-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 1 }}>{label}</div>
-      <div style={{ fontSize: 14, fontWeight: 800, color, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em' }}>
-        {value.toFixed(label === 'Pen' ? 2 : 3)}
+    <div style={{ textAlign: 'center', minWidth: 48, padding: '0 2px' }}>
+      <div style={{ fontSize: 8, fontWeight: 800, color: 'var(--gs-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 1 }}>{label}</div>
+      <div style={{ fontSize: 13, fontWeight: 800, color, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em' }}>
+        {value.toFixed(label === 'Neutral' ? 2 : 3)}
       </div>
     </div>
   )

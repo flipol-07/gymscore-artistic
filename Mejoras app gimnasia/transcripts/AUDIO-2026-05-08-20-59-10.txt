@@ -1,0 +1,1 @@
+Cuando pulses en un icono y solo te muestre únicamente las notas de un cierto ejercicio, que aparezca también un botón de notas generales, que no solo sea volver pulsándolo de nuevo.

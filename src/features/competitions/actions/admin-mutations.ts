@@ -176,36 +176,161 @@ export async function setEventPasswordAction(
   return { ok: !error, error: error?.message }
 }
 
+/**
+ * Calcula la nota final a partir de los componentes.
+ * Modelo: nota = max(0, 10 + D - E - N)
+ * D = dificultad, E = deducciones de ejecución (se restan a 10),
+ * N = deducciones neutrales.
+ */
+function computeFinalScore(d: number, e: number, n: number): number {
+  const raw = 10 + d - e - n
+  return Math.max(0, Math.round(raw * 1000) / 1000)
+}
+
+function isUuid(v: unknown): v is string {
+  return typeof v === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v)
+}
+
 export async function saveScoreAction(input: {
   competitionId: string
   inscriptionId: string
   apparatus: string
-  score: number
+  /** Dorsal opcional para doble-validación: si se pasa, debe coincidir con la inscripción. */
+  dorsal?: number
+  /** Promotion opcional para validar que la inscripción pertenece al grupo. */
+  promotionId?: string
   dScore?: number
   eScore?: number
-}): Promise<{ ok: boolean; error?: string }> {
-  const { competitionId, inscriptionId, apparatus, score } = input
-  const dScore = input.dScore ?? 0
-  const eScore = input.eScore ?? 0
+  nScore?: number
+  /**
+   * Nota final ya calculada (compat con callers legacy).
+   * Si no se pasa pero hay D/E/N, se recalcula con max(0, 10 + D - E - N).
+   * Si se pasa, también se valida coherencia con D/E/N (si se proveen).
+   */
+  score?: number
+}): Promise<{ ok: boolean; error?: string; score?: number }> {
+  const { competitionId, inscriptionId, apparatus } = input
+
+  if (!isUuid(competitionId) || !isUuid(inscriptionId)) {
+    return { ok: false, error: 'Identificador inválido.' }
+  }
+  if (input.promotionId !== undefined && !isUuid(input.promotionId)) {
+    return { ok: false, error: 'Grupo inválido.' }
+  }
+
+  const dScore = Number(input.dScore ?? 0)
+  const eScore = Number(input.eScore ?? 0)
+  const nScore = Number(input.nScore ?? 0)
 
   const auth = await authorizeForCompetition(competitionId)
   if (!auth.ok) return { ok: false, error: auth.error }
 
-  if (typeof score !== 'number' || isNaN(score) || score < 0 || score > 30) {
+  const allowed = ['vault', 'bars', 'beam', 'floor', 'pommel', 'rings', 'p_bars', 'h_bar']
+  if (!allowed.includes(apparatus)) return { ok: false, error: 'Aparato inválido.' }
+
+  if (!Number.isFinite(dScore) || dScore < 0 || dScore > 10) {
+    return { ok: false, error: 'Dificultad fuera de rango.' }
+  }
+  if (!Number.isFinite(eScore) || eScore < 0 || eScore > 10) {
+    return { ok: false, error: 'Deducción E fuera de rango.' }
+  }
+  if (!Number.isFinite(nScore) || nScore < 0 || nScore > 10) {
+    return { ok: false, error: 'Deducción Neutral fuera de rango.' }
+  }
+
+  // Determinar la nota final:
+  // - Si llegan D/E/N (algún valor != 0), recalcular siempre desde la fórmula oficial.
+  // - Si solo llega score (compat legacy), usar ese score validado.
+  const hasComponents = (input.dScore ?? null) !== null
+    || (input.eScore ?? null) !== null
+    || (input.nScore ?? null) !== null
+  let score: number
+  if (hasComponents) {
+    score = computeFinalScore(dScore, eScore, nScore)
+  } else if (typeof input.score === 'number') {
+    if (!Number.isFinite(input.score)) {
+      return { ok: false, error: 'Nota inválida.' }
+    }
+    score = Math.max(0, Math.round(input.score * 1000) / 1000)
+  } else {
+    return { ok: false, error: 'Falta nota o componentes.' }
+  }
+
+  if (score < 0 || score > 30) {
     return { ok: false, error: 'Nota fuera de rango.' }
   }
-  const allowed = ['vault', 'bars', 'beam', 'floor', 'pommel', 'rings', 'p_bars', 'h_bar']
-  if (!allowed.includes(apparatus)) return { ok: false, error: 'Aparato invalido.' }
+
+  // Si los componentes dejarían la nota en negativo, avisar (capeada a 0 igualmente).
+  if (hasComponents) {
+    const wouldBeNegative = (10 + dScore - eScore - nScore) < -0.001
+    if (wouldBeNegative) {
+      return {
+        ok: false,
+        error: 'Las deducciones dejarían la nota en negativo. Revisa los valores.',
+      }
+    }
+  }
 
   const admin = createAdminClient()
-  // Confirmar que la inscripcion pertenece a la competicion (defensa en profundidad)
+
+  // Validar inscripción + obtener fecha y estado de competición y promotion
   const { data: ins } = await admin
     .from('inscriptions')
-    .select('id, promotions:promotion_id(competition_id)')
+    .select(
+      'id, dorsal, promotion_id, ' +
+        'promotions:promotion_id(id, status, competition_id, competitions:competition_id(date, status))',
+    )
     .eq('id', inscriptionId)
     .single()
   const compId = (ins as any)?.promotions?.competition_id
-  if (!ins || compId !== competitionId) return { ok: false, error: 'Inscripcion invalida.' }
+  if (!ins || compId !== competitionId) {
+    return { ok: false, error: 'Inscripción inválida.' }
+  }
+
+  // Mejora 1: dorsal del request debe coincidir con el de la inscripción.
+  if (typeof input.dorsal === 'number') {
+    const insDorsal = (ins as any).dorsal as number | null
+    if (insDorsal != null && insDorsal !== input.dorsal) {
+      return {
+        ok: false,
+        error: `El dorsal ${input.dorsal} no pertenece a esta gimnasta.`,
+      }
+    }
+  }
+
+  // Mejora 1 (continuación): promotion debe coincidir con la inscripción
+  if (input.promotionId && (ins as any).promotion_id !== input.promotionId) {
+    return {
+      ok: false,
+      error: 'El dorsal no pertenece a este grupo.',
+    }
+  }
+
+  // Si la competición o el grupo están "finished", solo superadmin puede modificar.
+  const compStatus = (ins as any)?.promotions?.competitions?.status as string | undefined
+  const promStatus = (ins as any)?.promotions?.status as string | undefined
+  if (auth.via === 'event-cookie' && (compStatus === 'finished' || promStatus === 'finished')) {
+    return { ok: false, error: 'La competición está cerrada.' }
+  }
+
+  // Mejora 4: solo permitir edición el día de la competición (cookie de evento).
+  // Superadmin/admin con sesión Supabase pueden saltarse esta restricción.
+  if (auth.via === 'event-cookie') {
+    const compDateStr = (ins as any)?.promotions?.competitions?.date as string | undefined
+    if (compDateStr) {
+      // Comparar en zona Madrid (YYYY-MM-DD)
+      const todayMadrid = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Europe/Madrid',
+        year: 'numeric', month: '2-digit', day: '2-digit',
+      }).format(new Date())
+      if (compDateStr !== todayMadrid) {
+        return {
+          ok: false,
+          error: `Solo se pueden meter notas el día de la competición (${compDateStr}).`,
+        }
+      }
+    }
+  }
 
   const { error } = await admin
     .from('scores')
@@ -216,9 +341,71 @@ export async function saveScoreAction(input: {
         score,
         d_score: dScore,
         e_score: eScore,
+        n_score: nScore,
       },
       { onConflict: 'inscription_id,apparatus' },
     )
+  if (error) return { ok: false, error: error.message }
+  return { ok: true, score }
+}
+
+/**
+ * Borra la nota de un aparato concreto de un gimnasta.
+ * Útil cuando el juez quiere "vaciar" una nota (mejora 3: que aparezca como línea `_`).
+ */
+export async function deleteScoreAction(input: {
+  competitionId: string
+  inscriptionId: string
+  apparatus: string
+}): Promise<{ ok: boolean; error?: string }> {
+  const { competitionId, inscriptionId, apparatus } = input
+  if (!isUuid(competitionId) || !isUuid(inscriptionId)) {
+    return { ok: false, error: 'Identificador inválido.' }
+  }
+  const allowed = ['vault', 'bars', 'beam', 'floor', 'pommel', 'rings', 'p_bars', 'h_bar']
+  if (!allowed.includes(apparatus)) return { ok: false, error: 'Aparato inválido.' }
+
+  const auth = await authorizeForCompetition(competitionId)
+  if (!auth.ok) return { ok: false, error: auth.error }
+
+  const admin = createAdminClient()
+  const { data: ins } = await admin
+    .from('inscriptions')
+    .select(
+      'id, promotions:promotion_id(status, competition_id, competitions:competition_id(date, status))',
+    )
+    .eq('id', inscriptionId)
+    .single()
+  if (!ins || (ins as any).promotions?.competition_id !== competitionId) {
+    return { ok: false, error: 'Inscripción inválida.' }
+  }
+
+  const compStatus = (ins as any)?.promotions?.competitions?.status as string | undefined
+  const promStatus = (ins as any)?.promotions?.status as string | undefined
+  if (auth.via === 'event-cookie' && (compStatus === 'finished' || promStatus === 'finished')) {
+    return { ok: false, error: 'La competición está cerrada.' }
+  }
+  if (auth.via === 'event-cookie') {
+    const compDateStr = (ins as any)?.promotions?.competitions?.date as string | undefined
+    if (compDateStr) {
+      const todayMadrid = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Europe/Madrid',
+        year: 'numeric', month: '2-digit', day: '2-digit',
+      }).format(new Date())
+      if (compDateStr !== todayMadrid) {
+        return {
+          ok: false,
+          error: `Solo se pueden borrar notas el día de la competición (${compDateStr}).`,
+        }
+      }
+    }
+  }
+
+  const { error } = await admin
+    .from('scores')
+    .delete()
+    .eq('inscription_id', inscriptionId)
+    .eq('apparatus', apparatus)
   return { ok: !error, error: error?.message }
 }
 

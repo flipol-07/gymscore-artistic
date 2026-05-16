@@ -28,6 +28,23 @@ const APPARATUS_COLORS: Record<Apparatus, string> = {
   h_bar:  '#14B8A6',
 }
 
+function pillStyle(active: boolean, color: string): React.CSSProperties {
+  return {
+    display: 'inline-flex',
+    alignItems: 'center',
+    padding: '6px 10px',
+    borderRadius: 999,
+    background: active ? color : '#fff',
+    color: active ? '#fff' : color,
+    border: `1.5px solid ${active ? color : 'var(--gs-border)'}`,
+    fontWeight: 700,
+    fontSize: 11,
+    cursor: 'pointer',
+    letterSpacing: '-0.01em',
+    transition: 'all 0.15s',
+  }
+}
+
 export function RankingsTable({ entries, gender, focusGymnast }: RankingsTableProps) {
   const { isFavorite, toggleFavorite } = useFavorites()
   const [showCard, setShowCard] = useState<RankingEntry | null>(null)
@@ -101,9 +118,40 @@ export function RankingsTable({ entries, gender, focusGymnast }: RankingsTablePr
             fontWeight: 800,
             flexShrink: 0,
           }}>i</span>
-          <span>Pulsa una nota de cualquier aparato para ver el desglose <strong style={{ color: 'var(--gs-primary)' }}>D</strong> + <strong style={{ color: 'var(--gs-success)' }}>E</strong>{' '}+ <strong style={{ color: 'var(--gs-live)' }}>Pen</strong>.</span>
+          <span>Pulsa una nota para ver <strong>Nota General</strong> + <strong style={{ color: 'var(--gs-primary)' }}>Dificultad</strong> + <strong style={{ color: 'var(--gs-success)' }}>Ejecución</strong>{' '}+ <strong style={{ color: 'var(--gs-live)' }}>Neutral</strong>.</span>
         </div>
       )}
+
+      {/* Selector explícito de aparatos: botones por cada aparato + botón "Notas Generales".
+          Funciona también para móvil donde los iconos del thead son menos descubribles. */}
+      <div className="apparatus-filter-bar" style={{
+        display: 'flex', flexWrap: 'wrap', gap: 6,
+        padding: '8px 12px',
+        background: '#fff', borderBottom: '1px solid var(--gs-border)',
+      }}>
+        <button
+          type="button"
+          onClick={() => setFocusApparatus(null)}
+          style={pillStyle(focusApparatus === null, '#334155')}
+        >
+          Notas Generales
+        </button>
+        {baseApparatus.map(app => (
+          <button
+            key={`pill-${app}`}
+            type="button"
+            onClick={() => setFocusApparatus(focusApparatus === app ? null : app)}
+            style={pillStyle(focusApparatus === app, APPARATUS_COLORS[app])}
+          >
+            <ApparatusIcon
+              apparatus={app}
+              size={14}
+              tintColor={focusApparatus === app ? '#fff' : APPARATUS_COLORS[app]}
+            />
+            <span style={{ marginLeft: 4 }}>{APPARATUS_NAMES[app]}</span>
+          </button>
+        ))}
+      </div>
       <div className="ranking-table-container">
         <table className="ranking-table ranking-table-main">
           <colgroup>
@@ -249,19 +297,17 @@ export function RankingsTable({ entries, gender, focusGymnast }: RankingsTablePr
                     const score = entry[`${app}Score` as keyof RankingEntry] as number
                     const dScore = entry[`${app}DScore` as keyof RankingEntry] as number ?? 0
                     const eScore = entry[`${app}EScore` as keyof RankingEntry] as number ?? 0
+                    const nScore = (entry as any)[`${app}NScore`] as number ?? 0
                     const activeColor = APPARATUS_COLORS[app]
                     const dimmed = isAnyFocused && !isFocused
-                    // Penalización = total - D - E (solo si hay D o E registrados)
-                    const hasBreakdown = dScore > 0 || eScore > 0
-                    const penalty = hasBreakdown
-                      ? Math.round((score - dScore - eScore) * 1000) / 1000
-                      : 0
-                    const showPenalty = penalty < -0.001
+                    // Mejora 3: tratar score ≤ 0 como "no introducido" (línea —)
+                    const hasScore = score > 0.0001 || dScore > 0 || eScore > 0 || nScore > 0
                     return (
                       <td key={app} style={{ padding: '10px 2px', textAlign: 'center' }}>
                         <ScoreBreakdown
                           dScore={dScore}
                           eScore={eScore}
+                          nScore={nScore}
                           totalScore={score}
                           color={activeColor}
                         >
@@ -269,25 +315,13 @@ export function RankingsTable({ entries, gender, focusGymnast }: RankingsTablePr
                             <span className="score-cell" style={{
                               fontSize: isFocused ? 13 : 12,
                               fontWeight: isFocused ? 900 : 700,
-                              color: dimmed ? '#CBD5E1' : (score > 0 ? activeColor : '#CBD5E1'),
+                              color: dimmed ? '#CBD5E1' : (hasScore ? activeColor : '#CBD5E1'),
                               fontVariantNumeric: 'tabular-nums',
                               letterSpacing: '-0.03em',
                               transition: 'color 0.15s',
                             }}>
-                              {score > 0 ? score.toFixed(3) : '—'}
+                              {hasScore ? score.toFixed(3) : '—'}
                             </span>
-                            {showPenalty && (
-                              <span style={{
-                                fontSize: 9,
-                                fontWeight: 700,
-                                color: dimmed ? '#CBD5E1' : '#EF4444',
-                                fontVariantNumeric: 'tabular-nums',
-                                letterSpacing: '-0.02em',
-                                marginTop: 1,
-                              }} title="Penalización">
-                                {penalty.toFixed(2)}
-                              </span>
-                            )}
                           </div>
                         </ScoreBreakdown>
                       </td>

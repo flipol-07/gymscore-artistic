@@ -1,0 +1,1 @@
+Vale, si se cambian las notas y son 0-0 por cualquier prueba o cualquier nota, se elimina manualmente. Esto se queda registrado la nota y todos los demás salen líneas y en esta sale nota. Entonces, a ver si hay alguna manera de poder automatizar ese cambio y que se ponga en una línea directamente.

@@ -77,12 +77,6 @@ export function Navbar({
                   const { createClient } = await import('@/lib/supabase/client')
                   const supabase = createClient()
                   await supabase.auth.signOut()
-                  if (typeof window !== 'undefined') {
-                    // Clear all event auths
-                    Object.keys(sessionStorage).forEach(key => {
-                      if (key.startsWith('event_auth_')) sessionStorage.removeItem(key)
-                    })
-                  }
                   router.push('/')
                 }}
                 className="gs-btn-secondary"
